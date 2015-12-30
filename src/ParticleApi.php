@@ -1,5 +1,8 @@
 <?php namespace articfox1986\phpparticle;
- 
+
+use Psr\Log\LoggerInterface;
+
+
 /*
  * @project phpParticle
  * @file    ParticleAPI.php
@@ -9,18 +12,25 @@
  * @date    March 12, 2015
  * @brief   PHP Class for interacting with the Particle Cloud (particle.io)
  */
-class ParticleApi {
+class ParticleApi
+{
+    // Authentication details for authenticating with the API.
+    private $auth_email = false;
+    private $auth_password = false;
 
-    private $_email = false;
-    private $_password = false;
     private $_accessToken = false;
-    private $_debug = false;
+
     private $_disableSSL = true;
-    private $_error = "No Error";
-    private $_errorSource = "None";
+
+    private $_error = 'No Error';
+    private $_errorSource = 'None';
+
     private $_result = false;
-    private $_debugType = "HTML";
-    private $_endpoint = "https://api.particle.io/";
+
+    private $debugLogger;
+    private $debugFlag = false;
+
+    private $_endpoint = 'https://api.particle.io/';
     private $_curlTimeout = 10;
 
     /**
@@ -86,8 +96,8 @@ class ParticleApi {
      */
     public function setAuth($email, $password)
     {
-        $this->_email = $email;
-        $this->_password = $password;
+        $this->auth_email = $email;
+        $this->auth_password = $password;
         return true;
     }
 
@@ -97,7 +107,7 @@ class ParticleApi {
      */
     public function getEmail()
     {
-        return $this->_email;
+        return $this->auth_email;
     }
 
     /**
@@ -106,7 +116,7 @@ class ParticleApi {
      */
     public function getPassword()
     {
-        return $this->_password;
+        return $this->auth_password;
     }
 
     /**
@@ -157,31 +167,25 @@ class ParticleApi {
     }
 
     /**
-     * Sets the debug type. Use "HTML" for errors automatically formatted for embedding into a webpage and "TEXT" for unformatted raw errors
+     * Provide the logger for debug logging.
      *
-     * @param string $debugType The debug type (either "HTML" or "TEXT")
+     * @param Psr\Log\LoggerInterface $debugLogger Object to handle all logged messages.
      *
      * @return void
      *
      */
-    public function setDebugType($debugType = 'HTML')
+    public function setLogger(LoggerInterface $debugLogger)
     {
-        if ($debugType === 'HTML' || $debugType === 'TEXT') {
-            $this->_debugType = $debugType;
-            return true;
-        } else {
-            $this->_setError(sprintf('Bad debug type (%s)', $debugType), 'setDebugType');
-            return false;
-        }
+        $this->debugLogger = $debugLogger;
     }
 
     /**
-     * Gets the debug type
-     * @return string
+     * Gets the debug logger object, or null if none set.
+     * @return null|Psr\Log\LoggerInterface
      */
-    public function getDebugType()
+    public function getLogger()
     {
-        return $this->_debugType;
+        return $this->debugLogger;
     }
 
     /**
@@ -194,7 +198,7 @@ class ParticleApi {
      */
     public function setDebug($debug = false)
     {
-        $this->_debug = ($debug) ? true : false;
+        $this->debugFlag = ($debug) ? true : false;
         return true;
     }
 
@@ -204,7 +208,7 @@ class ParticleApi {
      */
     public function getDebug()
     {
-        return $this->_debug;
+        return $this->debugFlag;
     }
 
     /**
@@ -262,57 +266,16 @@ class ParticleApi {
      * Private Function. Outputs the desired debug text formatted if required
      *
      * @param string $debugText The debug string to output
-     * @param string $override If set to true overrides the internal debug on/off state and always outputs the debugText. If set to false it follows the internal debug on/off state
+     * @param boolean $override If set to true overrides the internal debug on/off state and always outputs the debugText. If set to false it follows the internal debug on/off state
+     * @param null|array $context Substribution fields or other details to support the debug message.
      *
      * @return void
      *
      */
-    private function _debug($debugText, $override = false)
+    private function _debug($debugText, $override = false, array $context = array())
     {
-        if ($this->_debug == true || $override == true) {
-            if($this->_debugType == 'HTML')
-            {
-                echo $debugText . '<br />' . "\n";
-                return true;
-            }
-            else if($this->_debugType === 'TEXT')
-            {
-                echo $debugText . "\n";
-                return true;
-            }
-            else
-            {
-                $this->_setError(sprintf('Bad debut type (%s)', $this->_debugType), '_debug');
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Private Function. Outputs the desired debug array formatted if required
-     *
-     * @param mixed[] $debugArray The debug array to output
-     * @param string $override If set to true overrides the internal debug on/off state and always outputs the debugArray. If set to false it follows the internal debug on/off state
-     *
-     * @return void
-     *
-     */
-    private function _debug_r($debugArray, $override = false)
-    {
-        if ($this->_debug == true || $override == true) {
-            if ($this->_debugType === 'HTML') {
-                $this->debug('<pre>');
-                print_r($debugArray);
-                $this->debug('</pre>');
-                return true;
-            } else if($this->_debugType === 'TEXT') {
-                print_r($debugArray);
-                $this->debug();
-                return true;
-            } else {
-                $this->_setError(sprintf('Bad debut type (%s)', $this->_debugType), '_debug');
-                return false;
-            }
+        if (isset($this->debugLogger) && ($this->debugFlag || $override)) {
+            $this->debugLogger->debug($debugText, $context);
         }
     }
 
@@ -324,9 +287,9 @@ class ParticleApi {
      * @return void
      *
      */
-    public function debug($debugText)
+    public function debug($debugText, array $context = array())
     {
-        return $this->_debug($debugText, $override = true);
+        return $this->_debug($debugText, $override = true, $context);
     }
 
     /**
@@ -337,9 +300,9 @@ class ParticleApi {
      * @return void
      *
      */
-    public function debug_r($debugArray)
+    public function debug_r(array $debugArray)
     {
-        return $this->_debug_r($debugArray, $override = true);
+        return $this->_debug('Data', $override = true, $debugArray);
     }
 
     /**
@@ -508,7 +471,7 @@ class ParticleApi {
 
     public function newAccessToken($expires_in = false, $expires_at = false, $clientID = false, $clientSecret = false)
     {
-        $fields = array('grant_type' => 'password', 'username' => $this->_email, 'password' => $this->_password);
+        $fields = array('grant_type' => 'password', 'username' => $this->auth_email, 'password' => $this->auth_password);
 
         if ($expires_in !== false) {
             $fields['expires_in'] = intval($expires_in);
@@ -695,7 +658,7 @@ class ParticleApi {
             return false;
         }
 
-        $this->_debug(sprintf('Opening a %s connection to %s', $type, $url));
+        $this->_debug('Opening a {type} connection to {url}', false, array('type' => $type, 'url' => $url));
         curl_setopt($ch, CURLOPT_URL, $url);
 
         if ($this->_disableSSL) {
@@ -719,13 +682,13 @@ class ParticleApi {
         // Timeout in seconds
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->_curlTimeout);
 
-        $this->_debug('Auth Type: ' . $authType);
+        $this->_debug('Auth Type: {type}', false, array('type' => $authType));
 
         // basic auth
         if ($authType == 'basic') {
-            if ($this->_email && $this->_password) {
+            if ($this->auth_email && $this->auth_password) {
                 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                curl_setopt($ch, CURLOPT_USERPWD, $this->_email . ':' . $this->_password);
+                curl_setopt($ch, CURLOPT_USERPWD, $this->auth_email . ':' . $this->auth_password);
             } else {
                 list(, $caller) = debug_backtrace(false);
                 $errorText = 'No auth credentials (email/password) set';
@@ -741,16 +704,14 @@ class ParticleApi {
 
         // Download the given URL, and return output
         $this->_debug('Executing Curl Operation');
-        $this->_debug('Url:');
-        $this->_debug_r($url);
-        $this->_debug('Params:');
-        $this->_debug_r($params);
+        $this->_debug('Url: {url}', false, array('url' => $url));
+        $this->_debug('Params', false, $params);
         $output = curl_exec($ch);
 
-        $this->_debug(sprintf('Curl Result: "%s"', $output));
+        $this->_debug(sprintf('Curl Result: {result}', false, array('result' => $output)));
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $this->_debug(sprintf('Curl Response Code: "%s"', $httpCode));
+        $this->_debug('Curl Response Code: {code}', false, array('code' => $httpCode));
 
         // Close the cURL resource, and free system resources
 
@@ -760,7 +721,7 @@ class ParticleApi {
         if ($curlError != CURLE_OK) {
             $this->_debug('CURL Request - There was a CURL error');
             list(, $caller) = debug_backtrace(false);
-            //var_dump($caller['function']);
+
             $errorText = $this->_curlErrorCode($curlError);
             $this->_setError($errorText, $caller['function']);
             return false;
@@ -769,7 +730,7 @@ class ParticleApi {
 
             if (json_last_error() == 0) {
                 if (isset($retVal['error']) && $retVal['error']) {
-                    $this->_debug("CURL Request - API response contained 'error' field");
+                    $this->_debug('CURL Request - API response contained \'error\' field');
                     $errorText = $retVal['error'];
                     $this->_setError($errorText, __FUNCTION__);
                     return false;
@@ -779,7 +740,7 @@ class ParticleApi {
                     return true;
                 }
             } else {
-                $this->_debug("CURL Request - Unable to parse JSON");
+                $this->_debug('CURL Request - Unable to parse JSON');
                 $errorText = sprintf(
                     'Unable to parse JSON. Json error = %s. See %s for more information. Raw response from Spark Cloud = \'%s\'',
                     json_last_error(),
