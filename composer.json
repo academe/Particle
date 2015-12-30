@@ -8,9 +8,13 @@
             "name": "Devin Pearson",
             "email": "devin@blackhat.co.za"
         },
-		{
+        {
             "name": "Harrison Jones",
             "email": "harrison@hhj.me"
+        },
+        {
+            "name": "Jason Judge",
+            "email": "jason@academe.co.uk"
         }
     ],
     "require": {},

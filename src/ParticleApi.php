@@ -4,13 +4,14 @@
  * @project phpParticle
  * @file    ParticleAPI.php
  * @authors Harrison Jones (harrison@hhj.me)
- *          Devin Pearson   (devin@blackhat.co.za)
+ *          Devin Pearson  (devin@blackhat.co.za)
+ *          Jason Judge    (jason@academe.co.uk)
  * @date    March 12, 2015
  * @brief   PHP Class for interacting with the Particle Cloud (particle.io)
  */
-class ParticleAPI {
+class ParticleApi {
 
-	private $_email = false;
+    private $_email = false;
     private $_password = false;
     private $_accessToken = false;
     private $_debug = false;
@@ -21,8 +22,8 @@ class ParticleAPI {
     private $_debugType = "HTML";
     private $_endpoint = "https://api.particle.io/";
     private $_curlTimeout = 10;
-	
-	/**
+
+    /**
      * Sets the api endpoint used. Default is the particle.io api
      *
      * @param string $endpoint A url for the api you want to use (default: "https://api.particle.io/")
@@ -32,18 +33,18 @@ class ParticleAPI {
      */
     public function setEndpoint($endpoint)
     {
-		$this->_endpoint = $endpoint;
-		return true;
+        $this->_endpoint = $endpoint;
+        return true;
     }
-	
-	/**
-	 * Gets the API endpoint used
-	 * @return string
-	 */
-	public function getEndpoint()
-	{
-		return $this->_endpoint;
-	}
+
+    /**
+     * Gets the API endpoint used
+     * @return string
+     */
+    public function getEndpoint()
+    {
+        return $this->_endpoint;
+    }
 
     /**
      * Sets the timeout used for calls against the api. 
@@ -55,27 +56,24 @@ class ParticleAPI {
      */
     public function setTimeout($timeout)
     {
-        if(is_numeric($timeout))
-        {
+        if (is_numeric($timeout)) {
             $this->_curlTimeout = intval($timeout);
             return true;
-        }
-        else
-        {
+        } else {
             $errorText = "Non numeric timeout";
             $this->_setError($errorText, __FUNCTION__);
             return false;
         }
     }
-    
+
     /**
-	 * Gets the CURL timeout
-	 * @return double
-	 */
-	public function getTimeout()
-	{
-		return $this->_curlTimeout;
-	}
+     * Gets the CURL timeout
+     * @return double
+     */
+    public function getTimeout()
+    {
+        return $this->_curlTimeout;
+    }
 
     /**
      * Sets the authentication details for authenticating with the API
@@ -90,26 +88,26 @@ class ParticleAPI {
     {
         $this->_email = $email;
         $this->_password = $password;
-		return true;
+        return true;
     }
 
     /**
-	 * Gets the auth email
-	 * @return string
-	 */
-	public function getEmail()
-	{
-		return $this->_email;
-	}
+     * Gets the auth email
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->_email;
+    }
 
     /**
-	 * Gets the auth password
-	 * @return string
-	 */
-	public function getPassword()
-	{
-		return $this->_password;
-	}
+     * Gets the auth password
+     * @return string
+     */
+    public function getPassword()
+    {
+        return $this->_password;
+    }
 
     /**
      * Clears all the authentication info (email and password). Internally set to false. Subsequent calls which require a email/password will fail
@@ -119,8 +117,8 @@ class ParticleAPI {
      */
     public function clearAuth()
     {
-        $this->setAuth(false,false);
-		return true;
+        $this->setAuth(false, false);
+        return true;
     }
 
     /**
@@ -134,17 +132,17 @@ class ParticleAPI {
     public function setAccessToken($accessToken)
     {
         $this->_accessToken = $accessToken;
-		return true;
+        return true;
     }
 
     /**
-	 * Gets the Access Token
-	 * @return string
-	 */
-	public function getAccessToken()
-	{
-		return $this->_accessToken;
-	}
+     * Gets the Access Token
+     * @return string
+     */
+    public function getAccessToken()
+    {
+        return $this->_accessToken;
+    }
 
     /**
      * Clears the access token info. Internally set to false. Subsequent calls which require an access token will fail
@@ -155,7 +153,7 @@ class ParticleAPI {
     public function clearAccessToken()
     {
         $this->setAccessToken(false);
-		return true;
+        return true;
     }
 
     /**
@@ -166,28 +164,25 @@ class ParticleAPI {
      * @return void
      *
      */
-    public function setDebugType($debugType = "HTML")
+    public function setDebugType($debugType = 'HTML')
     {
-        if(($debugType == "HTML") or ($debugType == "TEXT"))
-        {
+        if ($debugType === 'HTML' || $debugType === 'TEXT') {
             $this->_debugType = $debugType;
             return true;
-        }
-        else
-        {
-            $this->_setError("Bad debut type (" . $debugType . ")", "setDebugType");
+        } else {
+            $this->_setError(sprintf('Bad debug type (%s)', $debugType), 'setDebugType');
             return false;
         }
     }
 
     /**
-	 * Gets the debug type
-	 * @return string
-	 */
-	public function getDebugType()
-	{
-		return $this->_debugType;
-	}
+     * Gets the debug type
+     * @return string
+     */
+    public function getDebugType()
+    {
+        return $this->_debugType;
+    }
 
     /**
      * Turn internal debugging on or off. Note, external calls made to debug ($obj->debug(...)) will always display regardless of this setting
@@ -200,17 +195,17 @@ class ParticleAPI {
     public function setDebug($debug = false)
     {
         $this->_debug = ($debug) ? true : false;
-		return true;
+        return true;
     }
 
     /**
-	 * Gets whether debug is on or off
-	 * @return boolean
-	 */
-	public function getDebug()
-	{
-		return $this->_debug;
-	}
+     * Gets whether debug is on or off
+     * @return boolean
+     */
+    public function getDebug()
+    {
+        return $this->_debug;
+    }
 
     /**
      * Turn on or off SSL verification (it's a CURL thing). For testing, before you get the certificates setup, you might need to disable SSL verificatioon. Note this is a security concern
@@ -223,17 +218,17 @@ class ParticleAPI {
     public function setDisableSSL($disableSSL = false)
     {
         $this->_disableSSL = ($disableSSL) ? true : false;
-		return true;
+        return true;
     }
-    
+
     /**
-	 * Gets the whether ssls are disabled
-	 * @return string
-	 */
-	public function getDisableSSL()
-	{
-		return $this->_disableSSL;
-	}
+     * Gets the whether ssls are disabled
+     * @return string
+     */
+    public function getDisableSSL()
+    {
+        return $this->_disableSSL;
+    }
 
     /**
      * Private Function. Sets the internal _error & _errorSource variables. Allow for tracking which function resulted in an error and what that error was
@@ -249,7 +244,7 @@ class ParticleAPI {
         $this->_error = $errorText;
         $this->_errorSource = $errorSource;
     }
-    
+
     /**
      * Private Function. Sets the internal _errorSource. Allow for tracking which function resulted in an error
      *
@@ -274,21 +269,20 @@ class ParticleAPI {
      */
     private function _debug($debugText, $override = false)
     {
-        if(($this->_debug == true) || ($override == true))
-        {
-            if($this->_debugType == "HTML")
+        if ($this->_debug == true || $override == true) {
+            if($this->_debugType == 'HTML')
             {
-                echo $debugText . "<BR/>\n";
+                echo $debugText . '<br />' . "\n";
                 return true;
             }
-            else if($this->_debugType == "TEXT")
+            else if($this->_debugType === 'TEXT')
             {
                 echo $debugText . "\n";
                 return true;
             }
             else
             {
-                $this->_setError("Bad debut type (" . $this->_debugType . ")", "_debug");
+                $this->_setError(sprintf('Bad debut type (%s)', $this->_debugType), '_debug');
                 return false;
             }
         }
@@ -305,24 +299,18 @@ class ParticleAPI {
      */
     private function _debug_r($debugArray, $override = false)
     {
-        if(($this->_debug == true) || ($override == true))
-        {
-            if($this->_debugType == "HTML")
-            {
-                $this->debug("<pre>");
+        if ($this->_debug == true || override == true) {
+            if ($this->_debugType === 'HTML') {
+                $this->debug('<pre>');
                 print_r($debugArray);
-                $this->debug("</pre>");
+                $this->debug('</pre>');
                 return true;
-            }
-            else if($this->_debugType == "TEXT")
-            {
+            } else if($this->_debugType === 'TEXT') {
                 print_r($debugArray);
                 $this->debug();
                 return true;
-            }
-            else
-            {
-                $this->_setError("Bad debut type (" . $this->_debugType . ")", "_debug");
+            } else {
+                $this->_setError(sprintf('Bad debut type (%s)', $this->_debugType), '_debug');
                 return false;
             }
         }
@@ -353,7 +341,7 @@ class ParticleAPI {
     {
         return $this->_debug_r($debugArray, $override = true);
     }
-    
+
     /**
      * Runs a particle function on the device. Requires the accessToken to be set
      *
@@ -365,12 +353,12 @@ class ParticleAPI {
      */
     public function callFunction($deviceID, $deviceFunction, $params)
     {
-            $url = $this->_endpoint .'v1/devices/' . $deviceID . '/' . $deviceFunction;
-            $result =  $this->_curlRequest($url, array('args'=>$params), 'post');
-            
+            $url = $this->_endpoint . 'v1/devices/' . $deviceID . '/' . $deviceFunction;
+            $result =  $this->_curlRequest($url, array('args' => $params), 'post');
+
             return $result;
     }
-    
+
     /**
      * Gets the value of a particle variable. Requires the accessToken to be set
      * 
@@ -381,12 +369,12 @@ class ParticleAPI {
      */
     public function getVariable($deviceID, $variableName)
     {
-            $url = $this->_endpoint .'v1/devices/' . $deviceID . '/' . $variableName;
-            $result = $this->_curlRequest($url, array(), 'get');
-            
-            return $result;
+        $url = $this->_endpoint . 'v1/devices/' . $deviceID . '/' . $variableName;
+        $result = $this->_curlRequest($url, array(), 'get');
+
+        return $result;
     }
-    
+
     /**
      * Lists all your cores assigned to your cloud account. Requires the accessToken to be set
      *
@@ -394,10 +382,10 @@ class ParticleAPI {
      */
     public function listDevices()
     {
-            $url = $this->_endpoint .'v1/devices/';
-            $result = $this->_curlRequest($url, array(), 'get');
+        $url = $this->_endpoint . 'v1/devices/';
+        $result = $this->_curlRequest($url, array(), 'get');
 
-            return $result;
+        return $result;
     }
 
     /**
@@ -409,12 +397,12 @@ class ParticleAPI {
      */
     public function getAttributes($deviceID)
     {
-            $url = $this->_endpoint .'v1/devices/' . $deviceID;
-            $result = $this->_curlRequest($url, array(), 'get');
-            
-            return $result;
+        $url = $this->_endpoint . 'v1/devices/' . $deviceID;
+        $result = $this->_curlRequest($url, array(), 'get');
+
+        return $result;
     }
-    
+
     /**
      * Set the name/renames your core. Requires the accessToken to be set
      *
@@ -425,12 +413,12 @@ class ParticleAPI {
      */
     public function renameDevice($deviceID,$name)
     {
-            $url = $this->_endpoint .'v1/devices/' . $deviceID;
-            $result = $this->_curlRequest($url, array("name" => $name), 'put');
-            
-            return $result;
+        $url = $this->_endpoint . 'v1/devices/' . $deviceID;
+        $result = $this->_curlRequest($url, array('name' => $name), 'put');
+
+        return $result;
     }
-    
+
     /**
      * Attempts to add a device to your cloud account. Requires the accessToken to be set. Note, you may want to follow this up with a call to "setName" as new Core's names are blank. Interestingly, if claiming an order core their name is retained across the unclaim/claim process
      *
@@ -442,16 +430,17 @@ class ParticleAPI {
 
     public function claimDevice($deviceID, $requestTransfer = false)
     {
-            $url = $this->_endpoint .'v1/devices';
+        $url = $this->_endpoint . 'v1/devices';
 
-            if($requestTransfer)
-                $result = $this->_curlRequest($url, array('id' => $deviceID, 'request_transfer' => 'true'), 'post');
-            else
-                $result = $this->_curlRequest($url, array('id' => $deviceID, 'request_transfer' => 'false'), 'post');
-            
-            return $result;
+        if ($requestTransfer) {
+            $result = $this->_curlRequest($url, array('id' => $deviceID, 'request_transfer' => 'true'), 'post');
+        } else {
+            $result = $this->_curlRequest($url, array('id' => $deviceID, 'request_transfer' => 'false'), 'post');
+        }
+
+        return $result;
     }
-    
+
     /**
      * Removes the core from your cloud account. Requires the accessToken to be set
      *
@@ -461,10 +450,10 @@ class ParticleAPI {
      */
     public function removeDevice($deviceID)
     {
-            $url = $this->_endpoint ."v1/devices/{$deviceID}/";
-            $result = $this->_curlRequest($url, array(), 'delete');
-            
-            return $result;
+        $url = $this->_endpoint . "v1/devices/{$deviceID}/";
+        $result = $this->_curlRequest($url, array(), 'delete');
+
+        return $result;
     }
 
     /**
@@ -479,17 +468,20 @@ class ParticleAPI {
      */
     public function uploadFirmware($deviceID,$filename,$filepath,$isBinary=false)
     {
-            // Create a CURLFile object
-            $cfile = new CURLFile($filepath,'application/octet-stream',$filename);
+        // Create a CURLFile object
+        $cfile = new CURLFile($filepath, 'application/octet-stream', $filename);
 
-            $url = $this->_endpoint .'v1/devices/' . $deviceID;
-            $params = array('file' => $cfile);
-            if($isBinary == true) 
-                $params['file_type'] = "binary";
-            $result = $this->_curlRequest($url, $params, 'put-file');  
-            return $result; 
+        $url = $this->_endpoint . 'v1/devices/' . $deviceID;
+        $params = array('file' => $cfile);
+
+        if ($isBinary == true) {
+            $params['file_type'] = 'binary';
+        }
+
+        $result = $this->_curlRequest($url, $params, 'put-file');  
+        return $result; 
     }
-    
+
     /**
      * Gets a list of your tokens from the particle cloud. Requires the email/password auth to be set
      *
@@ -497,12 +489,12 @@ class ParticleAPI {
      */
     public function listAccessTokens()
     {
-            $url = $this->_endpoint .'v1/access_tokens';
-            $result = $this->_curlRequest($url, array(), 'get', 'basic');
-            
-            return $result;
+        $url = $this->_endpoint . 'v1/access_tokens';
+        $result = $this->_curlRequest($url, array(), 'get', 'basic');
+
+        return $result;
     }
-    
+
     /**
      * Creates a new token on the particle cloud. Requires the email/password auth to be set
      *
@@ -518,24 +510,25 @@ class ParticleAPI {
     {
         $fields = array('grant_type' => 'password', 'username' => $this->_email, 'password' => $this->_password);
 
-        if($expires_in !== false)
+        if ($expires_in !== false) {
             $fields['expires_in'] = intval($expires_in);
+        }
 
-        if($expires_at !== false)
+        if ($expires_at !== false) {
             $fields['expires_at'] = $expires_at;
+        }
 
-        if($clientID)
-        {
+        if ($clientID) {
             $fields['client_id'] = $clientID;
             $fields['client_secret'] = $clientSecret;
         }
 
-        $url = $this->_endpoint .'oauth/token';
+        $url = $this->_endpoint . 'oauth/token';
         $result = $this->_curlRequest($url, $fields, 'post', 'basic-dummy');
 
         return $result;
     }
-    
+
     /**
      * Removes the token from the particle cloud. Requires the email/password auth to be set
      *
@@ -545,10 +538,10 @@ class ParticleAPI {
      */
     public function deleteAccessToken($token)
     {
-            $url = $this->_endpoint .'v1/access_tokens/'.$token;
-            $result = $this->_curlRequest($url, array(), 'delete', 'basic');
-            
-            return $result;
+        $url = $this->_endpoint . 'v1/access_tokens/' . $token;
+        $result = $this->_curlRequest($url, array(), 'delete', 'basic');
+
+        return $result;
     }
 
     /**
@@ -558,13 +551,13 @@ class ParticleAPI {
      */
     public function listWebhooks()
     {
-            $fields = array();
-            $url = $this->_endpoint .'v1/webhooks';
-            $result = $this->_curlRequest($url, $fields, 'get');
-            
-            return $result;
+        $fields = array();
+        $url = $this->_endpoint . 'v1/webhooks';
+        $result = $this->_curlRequest($url, $fields, 'get');
+
+        return $result;
     }
-    
+
     /**
      * Creates a new webhook on the particle cloud. Requires the accessToken to be set
      * @param string $event The event name used to trigger the webhook
@@ -575,13 +568,13 @@ class ParticleAPI {
      */
     public function newWebhook($event, $webhookUrl, $extras = array())
     {
-            $url = $this->_endpoint .'v1/webhooks/';
+        $url = $this->_endpoint . 'v1/webhooks/';
 
-            $fields = array_merge(array('event' => $event, 'url' => $webhookUrl),$extras);
+        $fields = array_merge(array('event' => $event, 'url' => $webhookUrl),$extras);
 
-            $result = $this->_curlRequest($url, $fields , 'post');
-            
-            return $result;
+        $result = $this->_curlRequest($url, $fields , 'post');
+
+        return $result;
     }
 
     /**
@@ -591,13 +584,13 @@ class ParticleAPI {
      */
     public function deleteWebhook($webhookID)
     {
-            $fields = array();
-            $url = $this->_endpoint ."v1/webhooks/{$webhookID}/";
-            $result = $this->_curlRequest($url, $fields, 'delete');
-            
-            return $result;
+        $fields = array();
+        $url = $this->_endpoint . "v1/webhooks/{$webhookID}/";
+        $result = $this->_curlRequest($url, $fields, 'delete');
+
+        return $result;
     }
-    
+
     /**
      * Sets the particle core signal mode state. Requires the accessToken to be set
      *
@@ -608,13 +601,13 @@ class ParticleAPI {
      */
     public function signalDevice($deviceID, $signalState = 0)
     {
-            $fields = array('signal' => $signalState);
-            $url = $this->_endpoint ."v1/devices/{$deviceID}/";
-            $result = $this->_curlRequest($url, $fields, 'put');
-            
-            return $result;
+        $fields = array('signal' => $signalState);
+        $url = $this->_endpoint . "v1/devices/{$deviceID}/";
+        $result = $this->_curlRequest($url, $fields, 'put');
+
+        return $result;
     }
-    
+
     /**
      * Returns the latest error
      *
@@ -644,7 +637,7 @@ class ParticleAPI {
     {
         return $this->_result;
     }
-    
+
     /**
      * Private Function. Performs a CURL Request with the given parameters
      *
@@ -657,76 +650,60 @@ class ParticleAPI {
      */
     private function _curlRequest($url, $params = null, $type = 'post', $authType = 'none')
     {
-        
         $fields_string = null;
 
-        if($authType == 'none')
-            if ($this->_accessToken)
-            {
+        if ($authType == 'none') {
+            if ($this->_accessToken) {
                $params['access_token'] = $this->_accessToken;
-            } 
-            else
-            {
-                $errorText = "No access token set";
+            } else {
+                $errorText = 'No access token set';
                 list(, $caller) = debug_backtrace(false);
                 $this->_setError($errorText, $caller['function']);
                 return false;
             }
-            
+        }
 
         // is cURL installed yet?
-        if (!function_exists('curl_init'))
-        {
-            die("CURL is not installed/available");
+        if ( ! function_exists('curl_init')) {
+            die('CURL is not installed/available');
         }
 
         // OK cool - then let's create a new cURL resource handle
         $ch = curl_init();
-        //set the number of POST vars, POST data
-        if($type == 'get')
-        {
-            $url .= ("?" . http_build_query($params));
-        }
-        else if ($type == 'post') 
-        {
+
+        // set the number of POST vars, POST data
+        if ($type === 'get') {
+            $url .= ('?' . http_build_query($params));
+        } else if ($type == 'post') {
             curl_setopt($ch,CURLOPT_POST,count($params));
             curl_setopt($ch,CURLOPT_POSTFIELDS,http_build_query($params));
-        }
-        else if($type == "put")
-        {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+        } else if($type == 'put') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
             curl_setopt($ch,CURLOPT_POSTFIELDS,http_build_query($params));
-        }
-        else if($type == "put-file")
-        {
+        } else if($type == 'put-file') {
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
             unset($params['access_token']);
             curl_setopt($ch,CURLOPT_POSTFIELDS,$params);
-            $url .= "?access_token=" . $this->_accessToken;
-        }
-        else if ($type == 'delete') 
-        {
-            $url .= ("?" . http_build_query($params));
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-        } 
-        else 
-        {
-            $errorText = "Unsupported method type (" . $type . ")";
+            $url .= '?access_token=' . $this->_accessToken;
+        } else if ($type == 'delete') {
+            $url .= ('?' . http_build_query($params));
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        } else {
+            $errorText = sprintf('Unsupported method type (%s)', $type);
             $this->_setError($errorText, __FUNCTION__);
             return false;
         }
 
-        $this->_debug("Opening a {$type} connection to {$url}");
+        $this->_debug(sprintf('Opening a %s connection to %s', $type, $url));
         curl_setopt($ch, CURLOPT_URL, $url);
-        
-        if($this->_disableSSL)
-        {
+
+        if ($this->_disableSSL) {
             // stop the verification of certificate
-            $this->_debug("[WARN] Disabling SSL Verification for CURL");
+            $this->_debug('[WARN] Disabling SSL Verification for CURL');
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
-        
+
         // Set a referer
         // curl_setopt($ch, CURLOPT_REFERER, "http://www.example.com/curl.htm");
 
@@ -741,83 +718,81 @@ class ParticleAPI {
 
         // Timeout in seconds
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->_curlTimeout);
-        
-        $this->_debug("Auth Type: " . $authType);
+
+        $this->_debug('Auth Type: ' . $authType);
+
         // basic auth
         if ($authType == 'basic') {
-            if(($this->_email) && ($this->_password))
-            {
+            if ($this->_email && $this->_password) {
                 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                curl_setopt($ch, CURLOPT_USERPWD, $this->_email . ":" . $this->_password);
-                }
-            else
-            {
+                curl_setopt($ch, CURLOPT_USERPWD, $this->_email . ':' . $this->_password);
+            } else {
                 list(, $caller) = debug_backtrace(false);
-                $errorText = "No auth credentials (email/password) set";
+                $errorText = 'No auth credentials (email/password) set';
                 $this->_setError($errorText, $caller['function']);
                 return false;
             }
         }
+
         if ($authType == 'basic-dummy') {
             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-            curl_setopt($ch, CURLOPT_USERPWD, "particle:particle");
+            curl_setopt($ch, CURLOPT_USERPWD, 'particle:particle');
         }
-        
+
         // Download the given URL, and return output
-        $this->_debug("Executing Curl Operation");
-        $this->_debug("Url:");
+        $this->_debug('Executing Curl Operation');
+        $this->_debug('Url:');
         $this->_debug_r($url);
-        $this->_debug("Params:");
+        $this->_debug('Params:');
         $this->_debug_r($params);
         $output = curl_exec($ch);
-        
-        $this->_debug("Curl Result: '" .  $output . "'");
-        
+
+        $this->_debug(sprintf('Curl Result: "%s"', $output));
+
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $this->_debug("Curl Response Code: '" .  $httpCode."'");
+        $this->_debug(sprintf('Curl Response Code: "%s"', $httpCode));
+
         // Close the cURL resource, and free system resources
 
         $curlError = curl_errno($ch);
         curl_close($ch);
-        if($curlError != CURLE_OK)
-        {
-            $this->_debug("CURL Request - There was a CURL error");
+
+        if ($curlError != CURLE_OK) {
+            $this->_debug('CURL Request - There was a CURL error');
             list(, $caller) = debug_backtrace(false);
             //var_dump($caller['function']);
             $errorText = $this->_curlErrorCode($curlError);
             $this->_setError($errorText, $caller['function']);
             return false;
-        }
-        else
-        {
-            $retVal = json_decode($output,true);
+        } else {
+            $retVal = json_decode($output, true);
 
-            if(json_last_error() == 0)
-            {
-                if(isset($retVal['error']) && $retVal['error'])
-                {
+            if (json_last_error() == 0) {
+                if (isset($retVal['error']) && $retVal['error']) {
                     $this->_debug("CURL Request - API response contained 'error' field");
                     $errorText = $retVal['error'];
                     $this->_setError($errorText, __FUNCTION__);
                     return false;
-                }
-                else
-                {
-                    $this->_debug("CURL Request - Returning True");
+                } else {
+                    $this->_debug('CURL Request - Returning True');
                     $this->_result = $retVal;
                     return true;
                 }
-            }
-            else
-            {
+            } else {
                 $this->_debug("CURL Request - Unable to parse JSON");
-                $errorText = "Unable to parse JSON. Json error = " . json_last_error() . ". See http://php.net/manual/en/function.json-last-error.php for more information. Raw response from Spark Cloud = '" . $result . "'";
+                $errorText = sprintf(
+                    'Unable to parse JSON. Json error = %s. See %s for more information. Raw response from Spark Cloud = \'%s\'',
+                    json_last_error(),
+                    'http://php.net/manual/en/function.json-last-error.php',
+                    $result
+                );
+
                 $this->_setError($errorText, __FUNCTION__);
                 return false;
             }
         }
     }
-    
+
     /**
      * Private Function. Returns a human readable string for a given CURL Error Code
      *
@@ -827,15 +802,13 @@ class ParticleAPI {
      */
     private function _curlErrorCode($curlCode)
     {
-        switch ($curlCode)
-        {
+        switch ($curlCode) {
             case 26:
-                return "Curl Error. There was a problem reading a local file or an error returned by the read callback.";
+                return 'Curl Error. There was a problem reading a local file or an error returned by the read callback.';
             case 30:
-                return "Curl Error. Operation timeout. The specified time-out period was reached according to the conditions.";
+                return 'Curl Error. Operation timeout. The specified time-out period was reached according to the conditions.';
             default:
                 return "Curl Error. Error number = {$curlCode}. See http://curl.haxx.se/libcurl/c/libcurl-errors.html for more information";
         }
     }
- 
 }
