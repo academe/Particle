@@ -299,7 +299,7 @@ class ParticleApi {
      */
     private function _debug_r($debugArray, $override = false)
     {
-        if ($this->_debug == true || override == true) {
+        if ($this->_debug == true || $override == true) {
             if ($this->_debugType === 'HTML') {
                 $this->debug('<pre>');
                 print_r($debugArray);
