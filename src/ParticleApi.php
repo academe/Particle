@@ -274,7 +274,7 @@ class ParticleApi
      * @return void
      *
      */
-    protected function _debug($debugText, $override = false, array $context = array())
+    protected function _debug($debugText, $override = false, array $context = [])
     {
         if (isset($this->debugLogger) && ($this->debugFlag || $override)) {
             $this->debugLogger->debug($debugText, $context);
@@ -289,7 +289,7 @@ class ParticleApi
      * @return void
      *
      */
-    public function debug($debugText, array $context = array())
+    public function debug($debugText, array $context = [])
     {
         return $this->_debug($debugText, $override = true, $context);
     }
@@ -318,9 +318,9 @@ class ParticleApi
      */
     public function callFunction($deviceID, $deviceFunction, $params)
     {
-            $url = $this->getUrl(array('devices', $deviceID, $deviceFunction));
+            $url = $this->getUrl(['devices', $deviceID, $deviceFunction]);
 
-            $result =  $this->_curlRequest($url, array('args' => $params), 'post');
+            $result =  $this->_curlRequest($url, ['args' => $params], 'post');
 
             return $result;
     }
@@ -335,9 +335,9 @@ class ParticleApi
      */
     public function getVariable($deviceID, $variableName)
     {
-        $url = $this->getUrl(array('devices', $deviceID, $variableName));
+        $url = $this->getUrl(['devices', $deviceID, $variableName]);
 
-        $result = $this->_curlRequest($url, array(), 'get');
+        $result = $this->_curlRequest($url, [], 'get');
 
         return $result;
     }
@@ -349,9 +349,9 @@ class ParticleApi
      */
     public function listDevices()
     {
-        $url = $this->getUrl(array('devices')) . '/';
+        $url = $this->getUrl(['devices']) . '/';
 
-        $result = $this->_curlRequest($url, array(), 'get');
+        $result = $this->_curlRequest($url, [], 'get');
 
         return $result;
     }
@@ -365,9 +365,9 @@ class ParticleApi
      */
     public function getAttributes($deviceID)
     {
-        $url = $this->getUrl(array('devices', $deviceID));
+        $url = $this->getUrl(['devices', $deviceID]);
 
-        $result = $this->_curlRequest($url, array(), 'get');
+        $result = $this->_curlRequest($url, [], 'get');
 
         return $result;
     }
@@ -382,9 +382,9 @@ class ParticleApi
      */
     public function renameDevice($deviceID,$name)
     {
-        $url = $this->getUrl(array('devices', $deviceID));
+        $url = $this->getUrl(['devices', $deviceID]);
 
-        $result = $this->_curlRequest($url, array('name' => $name), 'put');
+        $result = $this->_curlRequest($url, ['name' => $name], 'put');
 
         return $result;
     }
@@ -400,12 +400,12 @@ class ParticleApi
 
     public function claimDevice($deviceID, $requestTransfer = false)
     {
-        $url = $this->getUrl(array('devices'));
+        $url = $this->getUrl(['devices']);
 
         if ($requestTransfer) {
-            $result = $this->_curlRequest($url, array('id' => $deviceID, 'request_transfer' => 'true'), 'post');
+            $result = $this->_curlRequest($url, ['id' => $deviceID, 'request_transfer' => 'true'], 'post');
         } else {
-            $result = $this->_curlRequest($url, array('id' => $deviceID, 'request_transfer' => 'false'), 'post');
+            $result = $this->_curlRequest($url, ['id' => $deviceID, 'request_transfer' => 'false'], 'post');
         }
 
         return $result;
@@ -420,9 +420,9 @@ class ParticleApi
      */
     public function removeDevice($deviceID)
     {
-        $url = $this->getUrl(array('devices', $deviceID)) . '/';
+        $url = $this->getUrl(['devices', $deviceID]) . '/';
 
-        $result = $this->_curlRequest($url, array(), 'delete');
+        $result = $this->_curlRequest($url, [], 'delete');
 
         return $result;
     }
@@ -442,9 +442,9 @@ class ParticleApi
         // Create a CURLFile object
         $cfile = new CURLFile($filepath, 'application/octet-stream', $filename);
 
-        $url = $this->getUrl(array('devices', $deviceID));
+        $url = $this->getUrl(['devices', $deviceID]);
 
-        $params = array('file' => $cfile);
+        $params = ['file' => $cfile];
 
         if ($isBinary == true) {
             $params['file_type'] = 'binary';
@@ -461,9 +461,9 @@ class ParticleApi
      */
     public function listAccessTokens()
     {
-        $url = $this->getUrl(array('access_tokens'));
+        $url = $this->getUrl(['access_tokens']);
 
-        $result = $this->_curlRequest($url, array(), 'get', 'basic');
+        $result = $this->_curlRequest($url, [], 'get', 'basic');
 
         return $result;
     }
@@ -481,7 +481,7 @@ class ParticleApi
 
     public function newAccessToken($expires_in = false, $expires_at = false, $clientID = false, $clientSecret = false)
     {
-        $fields = array('grant_type' => 'password', 'username' => $this->auth_email, 'password' => $this->auth_password);
+        $fields = ['grant_type' => 'password', 'username' => $this->auth_email, 'password' => $this->auth_password];
 
         if ($expires_in !== false) {
             $fields['expires_in'] = intval($expires_in);
@@ -513,9 +513,9 @@ class ParticleApi
      */
     public function deleteAccessToken($token)
     {
-        $url = $this->getUrl(array('access_tokens', $token));
+        $url = $this->getUrl(['access_tokens', $token]);
 
-        $result = $this->_curlRequest($url, array(), 'delete', 'basic');
+        $result = $this->_curlRequest($url, [], 'delete', 'basic');
 
         return $result;
     }
@@ -527,8 +527,8 @@ class ParticleApi
      */
     public function listWebhooks()
     {
-        $fields = array();
-        $url = $this->getUrl(array('webhooks'));
+        $fields = [];
+        $url = $this->getUrl(['webhooks']);
 
         $result = $this->_curlRequest($url, $fields, 'get');
 
@@ -543,11 +543,11 @@ class ParticleApi
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
-    public function newWebhook($event, $webhookUrl, array $extras = array())
+    public function newWebhook($event, $webhookUrl, array $extras = [])
     {
-        $url = $this->getUrl(array('webhooks')) . '/';
+        $url = $this->getUrl(['webhooks']) . '/';
 
-        $fields = array_merge(array('event' => $event, 'url' => $webhookUrl), $extras);
+        $fields = array_merge(['event' => $event, 'url' => $webhookUrl], $extras);
 
         $result = $this->_curlRequest($url, $fields , 'post');
 
@@ -561,9 +561,9 @@ class ParticleApi
      */
     public function deleteWebhook($webhookID)
     {
-        $fields = array();
+        $fields = [];
 
-        $url = $this->getUrl(array('webhooks', $webhookID)) . '/';
+        $url = $this->getUrl(['webhooks', $webhookID]) . '/';
 
         $result = $this->_curlRequest($url, $fields, 'delete');
 
@@ -580,9 +580,9 @@ class ParticleApi
      */
     public function signalDevice($deviceID, $signalState = 0)
     {
-        $fields = array('signal' => $signalState);
+        $fields = ['signal' => $signalState];
 
-        $url = $this->getUrl(array('devices', $deviceID)) . '/';
+        $url = $this->getUrl(['devices', $deviceID]) . '/';
 
         $result = $this->_curlRequest($url, $fields, 'put');
 
@@ -624,7 +624,7 @@ class ParticleApi
      *
      * @return string The URL without a trailing slash.
      */
-    public function getUrl(array $path = array())
+    public function getUrl(array $path = [])
     {
         $url = $this->_endpoint . $this->apiVersion;
 
@@ -692,7 +692,7 @@ class ParticleApi
             return false;
         }
 
-        $this->_debug('Opening a {type} connection to {url}', false, array('type' => $type, 'url' => $url));
+        $this->_debug('Opening a {type} connection to {url}', false, ['type' => $type, 'url' => $url]);
         curl_setopt($ch, CURLOPT_URL, $url);
 
         if ($this->_disableSSL) {
@@ -716,7 +716,7 @@ class ParticleApi
         // Timeout in seconds
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->_curlTimeout);
 
-        $this->_debug('Auth Type: {type}', false, array('type' => $authType));
+        $this->_debug('Auth Type: {type}', false, ['type' => $authType]);
 
         // basic auth
         if ($authType == 'basic') {
@@ -738,14 +738,14 @@ class ParticleApi
 
         // Download the given URL, and return output
         $this->_debug('Executing Curl Operation');
-        $this->_debug('Url: {url}', false, array('url' => $url));
+        $this->_debug('Url: {url}', false, ['url' => $url]);
         $this->_debug('Params', false, $params);
         $output = curl_exec($ch);
 
-        $this->_debug(sprintf('Curl Result: {result}', false, array('result' => $output)));
+        $this->_debug(sprintf('Curl Result: {result}', false, ['result' => $output]));
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $this->_debug('Curl Response Code: {code}', false, array('code' => $httpCode));
+        $this->_debug('Curl Response Code: {code}', false, ['code' => $httpCode]);
 
         // Close the cURL resource, and free system resources
 

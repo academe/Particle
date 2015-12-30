@@ -1,8 +1,8 @@
 {
     "name": "articfox1986/phpparticle",
-    "description": "A php package for working with the particle API",
+    "description": "A php package for working with the Particle API",
     "license": "MIT",
-    "keywords": ["particle","php"],
+    "keywords": ["particle","php","photon"],
     "authors": [
         {
             "name": "Devin Pearson",
@@ -18,7 +18,8 @@
         }
     ],
     "require": {
-        "psr/log": "~1.0"
+        "psr/log": "~1.0",
+        "php": ">=5.4.16"
     },
     "require-dev": {
         "phpunit/phpunit": "4.0.*"
