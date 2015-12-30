@@ -15,23 +15,25 @@ use Psr\Log\LoggerInterface;
 class ParticleApi
 {
     // Authentication details for authenticating with the API.
-    private $auth_email = false;
-    private $auth_password = false;
+    protected $auth_email = false;
+    protected $auth_password = false;
 
-    private $_accessToken = false;
+    protected $_accessToken = false;
 
-    private $_disableSSL = true;
+    protected $_disableSSL = true;
 
-    private $_error = 'No Error';
-    private $_errorSource = 'None';
+    protected $_error = 'No Error';
+    protected $_errorSource = 'None';
 
-    private $_result = false;
+    protected $_result = false;
 
-    private $debugLogger;
-    private $debugFlag = false;
+    protected $debugLogger;
+    protected $debugFlag = false;
 
-    private $_endpoint = 'https://api.particle.io/';
-    private $_curlTimeout = 10;
+    protected $_endpoint = 'https://api.particle.io/';
+    protected $_curlTimeout = 10;
+
+    protected $apiVersion = 'v1';
 
     /**
      * Sets the api endpoint used. Default is the particle.io api
@@ -235,7 +237,7 @@ class ParticleApi
     }
 
     /**
-     * Private Function. Sets the internal _error & _errorSource variables. Allow for tracking which function resulted in an error and what that error was
+     * Sets the internal _error & _errorSource variables. Allow for tracking which function resulted in an error and what that error was
      *
      * @param string $errorText The value to set _error to
      * @param string $errorSource The value to set _errorSource to
@@ -243,27 +245,27 @@ class ParticleApi
      * @return void
      *
      */
-    private function _setError($errorText, $errorSource)
+    protected function _setError($errorText, $errorSource)
     {
         $this->_error = $errorText;
         $this->_errorSource = $errorSource;
     }
 
     /**
-     * Private Function. Sets the internal _errorSource. Allow for tracking which function resulted in an error
+     * Sets the internal _errorSource. Allow for tracking which function resulted in an error
      *
      * @param string $errorSource The value to set _errorSource to
      *
      * @return void
      *
      */
-    private function _setErrorSource($errorSource)
+    protected function _setErrorSource($errorSource)
     {
         $this->_errorSource = $errorSource;
     }
 
     /**
-     * Private Function. Outputs the desired debug text formatted if required
+     * Outputs the desired debug text formatted if required
      *
      * @param string $debugText The debug string to output
      * @param boolean $override If set to true overrides the internal debug on/off state and always outputs the debugText. If set to false it follows the internal debug on/off state
@@ -272,7 +274,7 @@ class ParticleApi
      * @return void
      *
      */
-    private function _debug($debugText, $override = false, array $context = array())
+    protected function _debug($debugText, $override = false, array $context = array())
     {
         if (isset($this->debugLogger) && ($this->debugFlag || $override)) {
             $this->debugLogger->debug($debugText, $context);
@@ -316,7 +318,8 @@ class ParticleApi
      */
     public function callFunction($deviceID, $deviceFunction, $params)
     {
-            $url = $this->_endpoint . 'v1/devices/' . $deviceID . '/' . $deviceFunction;
+            $url = $this->getUrl(array('devices', $deviceID, $deviceFunction));
+
             $result =  $this->_curlRequest($url, array('args' => $params), 'post');
 
             return $result;
@@ -332,7 +335,8 @@ class ParticleApi
      */
     public function getVariable($deviceID, $variableName)
     {
-        $url = $this->_endpoint . 'v1/devices/' . $deviceID . '/' . $variableName;
+        $url = $this->getUrl(array('devices', $deviceID, $variableName));
+
         $result = $this->_curlRequest($url, array(), 'get');
 
         return $result;
@@ -345,7 +349,8 @@ class ParticleApi
      */
     public function listDevices()
     {
-        $url = $this->_endpoint . 'v1/devices/';
+        $url = $this->getUrl(array('devices')) . '/';
+
         $result = $this->_curlRequest($url, array(), 'get');
 
         return $result;
@@ -360,7 +365,8 @@ class ParticleApi
      */
     public function getAttributes($deviceID)
     {
-        $url = $this->_endpoint . 'v1/devices/' . $deviceID;
+        $url = $this->getUrl(array('devices', $deviceID));
+
         $result = $this->_curlRequest($url, array(), 'get');
 
         return $result;
@@ -376,7 +382,8 @@ class ParticleApi
      */
     public function renameDevice($deviceID,$name)
     {
-        $url = $this->_endpoint . 'v1/devices/' . $deviceID;
+        $url = $this->getUrl(array('devices', $deviceID));
+
         $result = $this->_curlRequest($url, array('name' => $name), 'put');
 
         return $result;
@@ -393,7 +400,7 @@ class ParticleApi
 
     public function claimDevice($deviceID, $requestTransfer = false)
     {
-        $url = $this->_endpoint . 'v1/devices';
+        $url = $this->getUrl(array('devices'));
 
         if ($requestTransfer) {
             $result = $this->_curlRequest($url, array('id' => $deviceID, 'request_transfer' => 'true'), 'post');
@@ -413,7 +420,8 @@ class ParticleApi
      */
     public function removeDevice($deviceID)
     {
-        $url = $this->_endpoint . "v1/devices/{$deviceID}/";
+        $url = $this->getUrl(array('devices', $deviceID)) . '/';
+
         $result = $this->_curlRequest($url, array(), 'delete');
 
         return $result;
@@ -434,7 +442,8 @@ class ParticleApi
         // Create a CURLFile object
         $cfile = new CURLFile($filepath, 'application/octet-stream', $filename);
 
-        $url = $this->_endpoint . 'v1/devices/' . $deviceID;
+        $url = $this->getUrl(array('devices', $deviceID));
+
         $params = array('file' => $cfile);
 
         if ($isBinary == true) {
@@ -452,7 +461,8 @@ class ParticleApi
      */
     public function listAccessTokens()
     {
-        $url = $this->_endpoint . 'v1/access_tokens';
+        $url = $this->getUrl(array('access_tokens'));
+
         $result = $this->_curlRequest($url, array(), 'get', 'basic');
 
         return $result;
@@ -486,7 +496,9 @@ class ParticleApi
             $fields['client_secret'] = $clientSecret;
         }
 
+        // This does not have the API version number in the path.
         $url = $this->_endpoint . 'oauth/token';
+
         $result = $this->_curlRequest($url, $fields, 'post', 'basic-dummy');
 
         return $result;
@@ -501,7 +513,8 @@ class ParticleApi
      */
     public function deleteAccessToken($token)
     {
-        $url = $this->_endpoint . 'v1/access_tokens/' . $token;
+        $url = $this->getUrl(array('access_tokens', $token));
+
         $result = $this->_curlRequest($url, array(), 'delete', 'basic');
 
         return $result;
@@ -515,7 +528,8 @@ class ParticleApi
     public function listWebhooks()
     {
         $fields = array();
-        $url = $this->_endpoint . 'v1/webhooks';
+        $url = $this->getUrl(array('webhooks'));
+
         $result = $this->_curlRequest($url, $fields, 'get');
 
         return $result;
@@ -529,11 +543,11 @@ class ParticleApi
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
-    public function newWebhook($event, $webhookUrl, $extras = array())
+    public function newWebhook($event, $webhookUrl, array $extras = array())
     {
-        $url = $this->_endpoint . 'v1/webhooks/';
+        $url = $this->getUrl(array('webhooks')) . '/';
 
-        $fields = array_merge(array('event' => $event, 'url' => $webhookUrl),$extras);
+        $fields = array_merge(array('event' => $event, 'url' => $webhookUrl), $extras);
 
         $result = $this->_curlRequest($url, $fields , 'post');
 
@@ -548,7 +562,9 @@ class ParticleApi
     public function deleteWebhook($webhookID)
     {
         $fields = array();
-        $url = $this->_endpoint . "v1/webhooks/{$webhookID}/";
+
+        $url = $this->getUrl(array('webhooks', $webhookID)) . '/';
+
         $result = $this->_curlRequest($url, $fields, 'delete');
 
         return $result;
@@ -565,7 +581,9 @@ class ParticleApi
     public function signalDevice($deviceID, $signalState = 0)
     {
         $fields = array('signal' => $signalState);
-        $url = $this->_endpoint . "v1/devices/{$deviceID}/";
+
+        $url = $this->getUrl(array('devices', $deviceID)) . '/';
+
         $result = $this->_curlRequest($url, $fields, 'put');
 
         return $result;
@@ -602,7 +620,23 @@ class ParticleApi
     }
 
     /**
-     * Private Function. Performs a CURL Request with the given parameters
+     * Returns the URL for the API, with additional path components.
+     *
+     * @return string The URL without a trailing slash.
+     */
+    public function getUrl(array $path = array())
+    {
+        $url = $this->_endpoint . $this->apiVersion;
+
+        foreach($path as $level) {
+            $url .= '/' . rawurlencode($level);
+        }
+
+        return $url;
+    }
+
+    /**
+     * Performs a CURL Request with the given parameters
      *
      * @param string url The url to call
      * @param mixed[] params An array of parameters to pass to the url
@@ -611,7 +645,7 @@ class ParticleApi
      *
      * @return boolean true on success, false on failure
      */
-    private function _curlRequest($url, $params = null, $type = 'post', $authType = 'none')
+    protected function _curlRequest($url, $params = null, $type = 'post', $authType = 'none')
     {
         $fields_string = null;
 
@@ -755,13 +789,13 @@ class ParticleApi
     }
 
     /**
-     * Private Function. Returns a human readable string for a given CURL Error Code
+     * Returns a human readable string for a given CURL Error Code
      *
      * @param int curlCode The CURL error code
      *
      * @return string A human-readable string version of the curlCode
      */
-    private function _curlErrorCode($curlCode)
+    protected function _curlErrorCode($curlCode)
     {
         switch ($curlCode) {
             case 26:

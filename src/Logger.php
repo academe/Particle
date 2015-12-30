@@ -2,16 +2,19 @@
 
 /**
  * Debug logger.
- * PHP5.6 offers us the ability to use the LoggerTrait, which would
+ * PHP 5.6 offers us the ability to use the LoggerTrait, which would
  * save some code duplication. That can be a future enhancement.
  */
 
 use Exception;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+//use Psr\Log\LoggerTrait;
 
 class Logger implements LoggerInterface
 {
+    //use LoggerTrait;
+
     // The debugType is HTML or TEXT.
     private $debugType = 'HTML';
 
@@ -25,12 +28,13 @@ class Logger implements LoggerInterface
      */
     public function log($level, $message, array $context = array())
     {
-        // TODO: run through thr context array to find any values to use
+        // Run through thr context array to find any values to use
         // as substitution variables for the message. Any remaining can be
         // listed at the end.
 
         foreach($context as $key => $value) {
             $placeholder = '{' . $key . '}';
+
             if (strpos($message, $placeholder) !== false) {
                 $message = str_replace($placeholder, $value, $message);
                 unset($context[$key]);
