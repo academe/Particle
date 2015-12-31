@@ -15,23 +15,28 @@ use Psr\Log\LoggerInterface;
 class ParticleApi
 {
     // Authentication details for authenticating with the API.
-    protected $auth_email = false;
-    protected $auth_password = false;
+    protected $auth_email;
+    protected $auth_password;
 
-    protected $_accessToken = false;
+    // Access token  for the API.
+    protected $accessToken;
 
-    protected $_disableSSL = true;
+    protected $disableSSL = true;
 
     protected $_error = 'No Error';
     protected $_errorSource = 'None';
 
-    protected $_result = false;
+    // Latest return response (the decoded body).
+    protected $result;
 
-    protected $debugLogger;
+    // Debug logging can be turned on or off.
     protected $debugFlag = false;
 
+    // The logger object.
+    protected $debugLogger;
+
     protected $_endpoint = 'https://api.particle.io/';
-    protected $_curlTimeout = 10;
+    protected $curlTimeout = 10;
 
     protected $apiVersion = 'v1';
 
@@ -59,6 +64,15 @@ class ParticleApi
     }
 
     /**
+     * Gets the API version path component.
+     * @return string
+     */
+    public function getApiVersion()
+    {
+        return $this->apiVersion;
+    }
+
+    /**
      * Sets the timeout used for calls against the api. 
      *
      * @param int $timeout The amount of time, in seconds, for a call to wait for data before returning with a TIMEOUT error
@@ -69,12 +83,9 @@ class ParticleApi
     public function setTimeout($timeout)
     {
         if (is_numeric($timeout)) {
-            $this->_curlTimeout = intval($timeout);
-            return true;
+            $this->curlTimeout = intval($timeout);
         } else {
-            $errorText = "Non numeric timeout";
-            $this->_setError($errorText, __FUNCTION__);
-            return false;
+            throw new Exception('Non numeric timeout');
         }
     }
 
@@ -84,7 +95,7 @@ class ParticleApi
      */
     public function getTimeout()
     {
-        return $this->_curlTimeout;
+        return $this->curlTimeout;
     }
 
     /**
@@ -122,15 +133,16 @@ class ParticleApi
     }
 
     /**
-     * Clears all the authentication info (email and password). Internally set to false. Subsequent calls which require a email/password will fail
+     * Clears all the authentication info (email and password).
+     * Internally set to null.
+     * Subsequent calls which require a email/password will fail.
      *
      * @return void
      *
      */
     public function clearAuth()
     {
-        $this->setAuth(false, false);
-        return true;
+        $this->setAuth(null, null);
     }
 
     /**
@@ -143,8 +155,7 @@ class ParticleApi
      */
     public function setAccessToken($accessToken)
     {
-        $this->_accessToken = $accessToken;
-        return true;
+        $this->accessToken = $accessToken;
     }
 
     /**
@@ -153,7 +164,7 @@ class ParticleApi
      */
     public function getAccessToken()
     {
-        return $this->_accessToken;
+        return $this->accessToken;
     }
 
     /**
@@ -164,8 +175,7 @@ class ParticleApi
      */
     public function clearAccessToken()
     {
-        $this->setAccessToken(false);
-        return true;
+        $this->setAccessToken(null);
     }
 
     /**
@@ -191,17 +201,17 @@ class ParticleApi
     }
 
     /**
-     * Turn internal debugging on or off. Note, external calls made to debug ($obj->debug(...)) will always display regardless of this setting
+     * Turn internal debugging on or off.
+     * Note, external calls made to debug() will always display regardless of this setting.
      *
      * @param boolean $debug true turns on internal debugging & false turns off internal debugging
      *
      * @return void
      *
      */
-    public function setDebug($debug = false)
+    public function setDebug($debug)
     {
-        $this->debugFlag = ($debug) ? true : false;
-        return true;
+        $this->debugFlag = (bool)$debug ? true : false;
     }
 
     /**
@@ -221,23 +231,23 @@ class ParticleApi
      * @return void
      *
      */
-    public function setDisableSSL($disableSSL = false)
+    public function setDisableSSL($disableSSL)
     {
-        $this->_disableSSL = ($disableSSL) ? true : false;
-        return true;
+        $this->disableSSL = (bool)$disableSSL ? true : false;
     }
 
     /**
      * Gets the whether ssls are disabled
-     * @return string
+     * @return boolean
      */
     public function getDisableSSL()
     {
-        return $this->_disableSSL;
+        return $this->disableSSL;
     }
 
     /**
-     * Sets the internal _error & _errorSource variables. Allow for tracking which function resulted in an error and what that error was
+     * Sets the internal _error & _errorSource variables.
+     * Allow for tracking which function resulted in an error and what that error was
      *
      * @param string $errorText The value to set _error to
      * @param string $errorSource The value to set _errorSource to
@@ -282,25 +292,22 @@ class ParticleApi
     }
 
     /**
-     * Outputs the desired debug text formatted if required
+     * Logs a debug message and optional substituyion variables/context details.
      *
      * @param string $debugText The debug string to output
-     *
      * @return void
-     *
      */
     public function debug($debugText, array $context = [])
     {
-        return $this->_debug($debugText, $override = true, $context);
+        $this->_debug($debugText, $override = true, $context);
     }
 
     /**
-     * Outputs the desired debug array formatted if required
+     * Logs the desired debug array. Use debug() instead.
      *
-     * @param string $debugArray The debug array to output
-     *
+     * @deprecated
+     * @param string $debugArray The debug array to log
      * @return void
-     *
      */
     public function debug_r(array $debugArray)
     {
@@ -437,7 +444,7 @@ class ParticleApi
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
-    public function uploadFirmware($deviceID,$filename,$filepath,$isBinary=false)
+    public function uploadFirmware($deviceID, $filename, $filepath, $isBinary = false)
     {
         // Create a CURLFile object
         $cfile = new CURLFile($filepath, 'application/octet-stream', $filename);
@@ -446,11 +453,12 @@ class ParticleApi
 
         $params = ['file' => $cfile];
 
-        if ($isBinary == true) {
+        if ($isBinary === true) {
             $params['file_type'] = 'binary';
         }
 
-        $result = $this->_curlRequest($url, $params, 'put-file');  
+        $result = $this->_curlRequest($url, $params, 'put-file');
+
         return $result; 
     }
 
@@ -479,9 +487,13 @@ class ParticleApi
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
 
-    public function newAccessToken($expires_in = false, $expires_at = false, $clientID = false, $clientSecret = false)
+    public function newAccessToken($expires_in = false, $expires_at = false, $clientID = null, $clientSecret = null)
     {
-        $fields = ['grant_type' => 'password', 'username' => $this->auth_email, 'password' => $this->auth_password];
+        $fields = [
+            'grant_type' => 'password',
+            'username' => $this->auth_email,
+            'password' => $this->auth_password,
+        ];
 
         if ($expires_in !== false) {
             $fields['expires_in'] = intval($expires_in);
@@ -491,12 +503,12 @@ class ParticleApi
             $fields['expires_at'] = $expires_at;
         }
 
-        if ($clientID) {
+        if ($clientID && $clientSecret) {
             $fields['client_id'] = $clientID;
             $fields['client_secret'] = $clientSecret;
         }
 
-        // This does not have the API version number in the path.
+        // This URL does not have the API version number in the path.
         $url = $this->_endpoint . 'oauth/token';
 
         $result = $this->_curlRequest($url, $fields, 'post', 'basic-dummy');
@@ -616,11 +628,12 @@ class ParticleApi
      */
     public function getResult()
     {
-        return $this->_result;
+        return $this->result;
     }
 
     /**
      * Returns the URL for the API, with additional path components.
+     * TODO: support single array and varargs.
      *
      * @return string The URL without a trailing slash.
      */
@@ -650,8 +663,8 @@ class ParticleApi
         $fields_string = null;
 
         if ($authType == 'none') {
-            if ($this->_accessToken) {
-               $params['access_token'] = $this->_accessToken;
+            if ($this->accessToken) {
+               $params['access_token'] = $this->accessToken;
             } else {
                 $errorText = 'No access token set';
                 list(, $caller) = debug_backtrace(false);
@@ -660,42 +673,46 @@ class ParticleApi
             }
         }
 
-        // is cURL installed yet?
+        // Is cURL installed?
         if ( ! function_exists('curl_init')) {
-            die('CURL is not installed/available');
+            throw new Exception('CURL is not installed or available');
         }
 
         // OK cool - then let's create a new cURL resource handle
         $ch = curl_init();
 
-        // set the number of POST vars, POST data
-        if ($type === 'get') {
-            $url .= ('?' . http_build_query($params));
-        } else if ($type == 'post') {
-            curl_setopt($ch,CURLOPT_POST,count($params));
-            curl_setopt($ch,CURLOPT_POSTFIELDS,http_build_query($params));
-        } else if($type == 'put') {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-            curl_setopt($ch,CURLOPT_POSTFIELDS,http_build_query($params));
-        } else if($type == 'put-file') {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-            unset($params['access_token']);
-            curl_setopt($ch,CURLOPT_POSTFIELDS,$params);
-            $url .= '?access_token=' . $this->_accessToken;
-        } else if ($type == 'delete') {
-            $url .= ('?' . http_build_query($params));
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        } else {
-            $errorText = sprintf('Unsupported method type (%s)', $type);
-            $this->_setError($errorText, __FUNCTION__);
-            return false;
+        // Set the number of POST vars, POST data
+        switch ($type) {
+            case 'get':
+                $url .= ('?' . http_build_query($params));
+                break;
+            case 'post':
+                curl_setopt($ch, CURLOPT_POST, count($params));
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+                break;
+            case 'put':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+                break;
+            case 'put-file':
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                unset($params['access_token']);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+                $url .= '?access_token=' . $this->accessToken;
+                break;
+            case 'delete':
+                $url .= ('?' . http_build_query($params));
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                break;
+            default:
+                throw new Exception(sprintf('Unsupported method type (%s)', $type));
         }
 
         $this->_debug('Opening a {type} connection to {url}', false, ['type' => $type, 'url' => $url]);
         curl_setopt($ch, CURLOPT_URL, $url);
 
-        if ($this->_disableSSL) {
+        if ($this->disableSSL) {
             // stop the verification of certificate
             $this->_debug('[WARN] Disabling SSL Verification for CURL');
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -714,24 +731,21 @@ class ParticleApi
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         // Timeout in seconds
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->_curlTimeout);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $this->curlTimeout);
 
         $this->_debug('Auth Type: {type}', false, ['type' => $authType]);
 
         // basic auth
-        if ($authType == 'basic') {
+        if ($authType === 'basic') {
             if ($this->auth_email && $this->auth_password) {
                 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
                 curl_setopt($ch, CURLOPT_USERPWD, $this->auth_email . ':' . $this->auth_password);
             } else {
-                list(, $caller) = debug_backtrace(false);
-                $errorText = 'No auth credentials (email/password) set';
-                $this->_setError($errorText, $caller['function']);
-                return false;
+                throw new Exception('No auth credentials (email/password) set');
             }
         }
 
-        if ($authType == 'basic-dummy') {
+        if ($authType === 'basic-dummy') {
             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
             curl_setopt($ch, CURLOPT_USERPWD, 'particle:particle');
         }
@@ -770,7 +784,7 @@ class ParticleApi
                     return false;
                 } else {
                     $this->_debug('CURL Request - Returning True');
-                    $this->_result = $retVal;
+                    $this->result = $retVal;
                     return true;
                 }
             } else {

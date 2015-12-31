@@ -1,3 +1,4 @@
 # Ignore the actual config file
 phpSpark.config.php
 vendor/
+.idea

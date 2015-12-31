@@ -61,7 +61,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     *
+     * Set the debug type on construction.
      */
     public function __construct($debugType = 'HTML')
     {
