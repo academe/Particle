@@ -35,7 +35,7 @@ class ParticleApi
     // The logger object.
     protected $debugLogger;
 
-    protected $_endpoint = 'https://api.particle.io/';
+    protected $endpoint = 'https://api.particle.io/';
     protected $curlTimeout = 10;
 
     protected $apiVersion = 'v1';
@@ -45,13 +45,14 @@ class ParticleApi
      *
      * @param string $endpoint A url for the api you want to use (default: "https://api.particle.io/")
      *
-     * @return void
+     * @return self
      *
      */
     public function setEndpoint($endpoint)
     {
-        $this->_endpoint = $endpoint;
-        return true;
+        $clone = clone $this;
+        $clone->endpoint = $endpoint;
+        return $clone;
     }
 
     /**
@@ -60,7 +61,7 @@ class ParticleApi
      */
     public function getEndpoint()
     {
-        return $this->_endpoint;
+        return $this->endpoint;
     }
 
     /**
@@ -82,11 +83,13 @@ class ParticleApi
      */
     public function setTimeout($timeout)
     {
-        if (is_numeric($timeout)) {
-            $this->curlTimeout = intval($timeout);
-        } else {
+        if ( ! is_numeric($timeout)) {
             throw new Exception('Non numeric timeout');
         }
+
+        $clone = clone $this;
+        $clone->curlTimeout = intval($timeout);
+        return $clone;
     }
 
     /**
@@ -104,14 +107,17 @@ class ParticleApi
      * @param string $email The email to authenticate with
      * @param string $password The password to authenticate with
      *
-     * @return void
+     * @return self
      *
      */
     public function setAuth($email, $password)
     {
-        $this->auth_email = $email;
-        $this->auth_password = $password;
-        return true;
+        $clone = clone $this;
+
+        $clone->auth_email = $email;
+        $clone->auth_password = $password;
+
+        return $clone;
     }
 
     /**
@@ -137,12 +143,12 @@ class ParticleApi
      * Internally set to null.
      * Subsequent calls which require a email/password will fail.
      *
-     * @return void
+     * @return self
      *
      */
     public function clearAuth()
     {
-        $this->setAuth(null, null);
+        return $this->setAuth(null, null);
     }
 
     /**
@@ -150,12 +156,14 @@ class ParticleApi
      *
      * @param string $accessToken The access token to authenticate with
      *
-     * @return void
+     * @return $this
      *
      */
     public function setAccessToken($accessToken)
     {
-        $this->accessToken = $accessToken;
+        $clone = clone $this;
+        $clone->accessToken = $accessToken;
+        return $clone;
     }
 
     /**
@@ -170,12 +178,12 @@ class ParticleApi
     /**
      * Clears the access token info. Internally set to false. Subsequent calls which require an access token will fail
      *
-     * @return void
+     * @return self
      *
      */
     public function clearAccessToken()
     {
-        $this->setAccessToken(null);
+        return $this->setAccessToken(null);
     }
 
     /**
@@ -183,12 +191,14 @@ class ParticleApi
      *
      * @param Psr\Log\LoggerInterface $debugLogger Object to handle all logged messages.
      *
-     * @return void
+     * @return self
      *
      */
     public function setLogger(LoggerInterface $debugLogger)
     {
-        $this->debugLogger = $debugLogger;
+        $clone = clone $this;
+        $clone->debugLogger = $debugLogger;
+        return $clone;
     }
 
     /**
@@ -206,12 +216,14 @@ class ParticleApi
      *
      * @param boolean $debug true turns on internal debugging & false turns off internal debugging
      *
-     * @return void
+     * @return self
      *
      */
     public function setDebug($debug)
     {
-        $this->debugFlag = (bool)$debug ? true : false;
+        $clone = clone $this;
+        $clone->debugFlag = (bool)$debug ? true : false;
+        return $clone;
     }
 
     /**
@@ -224,16 +236,20 @@ class ParticleApi
     }
 
     /**
-     * Turn on or off SSL verification (it's a CURL thing). For testing, before you get the certificates setup, you might need to disable SSL verificatioon. Note this is a security concern
+     * Turn on or off SSL verification (it's a CURL thing).
+     * For testing, before you get the certificates setup, you might need to disable SSL verificatioon.
+     * Note this is a security concern
      *
-     * @param boolean $disableSSL true allows you to communicate with api endpoints with invalid security certificates & false enforces SSL verification
+     * @param boolean $disableSSL true communicates with api endpoints without validating security certificates
      *
-     * @return void
+     * @return self
      *
      */
     public function setDisableSSL($disableSSL)
     {
-        $this->disableSSL = (bool)$disableSSL ? true : false;
+        $clone = clone $this;
+        $clone->disableSSL = (bool)$disableSSL ? true : false;
+        return $clone;
     }
 
     /**
@@ -397,10 +413,12 @@ class ParticleApi
     }
 
     /**
-     * Attempts to add a device to your cloud account. Requires the accessToken to be set. Note, you may want to follow this up with a call to "setName" as new Core's names are blank. Interestingly, if claiming an order core their name is retained across the unclaim/claim process
+     * Attempts to add a device to your cloud account. Requires the accessToken to be set.
+     * Note, you may want to follow this up with a call to "setName" as new Core's names are blank.
+     * Interestingly, if claiming an order core their name is retained across the unclaim/claim process
      *
      * @param string $deviceID The device ID of the device to claim. 
-     * @param boolean $requestTransfer If true requests that the device be transfered to your account (use if the device is already claimed). If false will try to claim but not automatically send a transfer request
+     * @param boolean $requestTransfer true to request the already-claimed device be transfered to your account. If false will try to claim but not automatically send a transfer request.
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
@@ -509,7 +527,7 @@ class ParticleApi
         }
 
         // This URL does not have the API version number in the path.
-        $url = $this->_endpoint . 'oauth/token';
+        $url = $this->endpoint . 'oauth/token';
 
         $result = $this->_curlRequest($url, $fields, 'post', 'basic-dummy');
 
@@ -639,7 +657,7 @@ class ParticleApi
      */
     public function getUrl(array $path = [])
     {
-        $url = $this->_endpoint . $this->apiVersion;
+        $url = $this->endpoint . $this->apiVersion;
 
         foreach($path as $level) {
             $url .= '/' . rawurlencode($level);
@@ -699,7 +717,8 @@ class ParticleApi
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
                 unset($params['access_token']);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-                $url .= '?access_token=' . $this->accessToken;
+                // FIXME: what if the URL already has GET parameters?
+                $url .= '?access_token=' . rawurlencode($this->accessToken);
                 break;
             case 'delete':
                 $url .= ('?' . http_build_query($params));

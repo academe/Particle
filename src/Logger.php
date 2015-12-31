@@ -78,6 +78,8 @@ class Logger implements LoggerInterface
      */
     public function setDebugType($debugType)
     {
+        $debugType = strtoupper($debugType);
+
         if ($debugType === 'HTML' || $debugType === 'TEXT') {
             $this->debugType = $debugType;
         } else {
