@@ -1,7 +1,6 @@
-<?php namespace articfox1986\phpparticle;
+<?php
 
-use Psr\Log\LoggerInterface;
-
+namespace articfox1986\phpparticle;
 
 /*
  * @project phpParticle
@@ -12,6 +11,9 @@ use Psr\Log\LoggerInterface;
  * @date    March 12, 2015
  * @brief   PHP Class for interacting with the Particle Cloud (particle.io)
  */
+
+use Psr\Log\LoggerInterface;
+
 class ParticleApi
 {
     // Authentication details for authenticating with the API.
@@ -39,6 +41,13 @@ class ParticleApi
     protected $curlTimeout = 10;
 
     protected $apiVersion = 'v1';
+
+    protected $psr7;
+
+    public function __construct(ConnnectorInterface $psr7)
+    {
+        $this->psr7 = $psr7;
+    }
 
     /**
      * Sets the api endpoint used. Default is the particle.io api
@@ -102,7 +111,7 @@ class ParticleApi
     }
 
     /**
-     * Sets the authentication details for authenticating with the API
+     * Sets the authentication details for authenticating with the account over the API.
      *
      * @param string $email The email to authenticate with
      * @param string $password The password to authenticate with
@@ -121,7 +130,7 @@ class ParticleApi
     }
 
     /**
-     * Gets the auth email
+     * Gets the auth email.
      * @return string
      */
     public function getEmail()
@@ -130,7 +139,7 @@ class ParticleApi
     }
 
     /**
-     * Gets the auth password
+     * Gets the auth password.
      * @return string
      */
     public function getPassword()
@@ -156,7 +165,7 @@ class ParticleApi
      *
      * @param string $accessToken The access token to authenticate with
      *
-     * @return $this
+     * @return self
      *
      */
     public function setAccessToken($accessToken)
@@ -676,20 +685,35 @@ class ParticleApi
      *
      * @return boolean true on success, false on failure
      */
-    protected function _curlRequest($url, $params = null, $type = 'post', $authType = 'none')
+    protected function _curlRequest($url, $params = [], $type = 'post', $authType = 'none')
     {
-        $fields_string = null;
+        $uri = $this->psr7->createUri($url);
 
-        if ($authType == 'none') {
+        if ($authType === 'none') {
             if ($this->accessToken) {
-               $params['access_token'] = $this->accessToken;
+                // Add the access token to the parameters, but not for get-file.
+                if ($type !== 'get-file') {
+                    $params['access_token'] = $this->accessToken;
+                }
             } else {
-                $errorText = 'No access token set';
-                list(, $caller) = debug_backtrace(false);
-                $this->_setError($errorText, $caller['function']);
-                return false;
+                throw new Exception('No access token set');
             }
         }
+
+        // Add GET parameters to URI if a GET request.
+        if (($type === 'get' || $type === 'delete') && $params) {
+            foreach($params as $key => $value) {
+                $uri = $uri->withQueryValue($uri, $key, $value);
+            }
+        }
+
+        if ($type === 'put-file') {
+            $uri = $uri->withQueryValue($uri, 'access_token', $this->accessToken);
+        }
+//var_dump($params); die("URI=" . (string)$uri);
+        $request_message = $this->psr7->createRequest(($type == 'put-file' ? 'put' : $type), $uri);
+
+//        var_dump($request_message);
 
         // Is cURL installed?
         if ( ! function_exists('curl_init')) {
@@ -713,11 +737,12 @@ class ParticleApi
                 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
                 break;
             case 'put-file':
+                // The access token goes onto the URL, while remaining parameters
+                // stay in the body.
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
                 unset($params['access_token']);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-                // FIXME: what if the URL already has GET parameters?
                 $url .= '?access_token=' . rawurlencode($this->accessToken);
                 break;
             case 'delete':
@@ -727,6 +752,13 @@ class ParticleApi
             default:
                 throw new Exception(sprintf('Unsupported method type (%s)', $type));
         }
+
+        if ($type !== 'get' && $type !== 'delete') {
+            $body = $this->psr7->createStreamForString(http_build_query($params));
+//echo " START " . (string)$body . " END ";
+            $request_message = $request_message->withBody($body);
+        }
+        var_dump($request_message);
 
         $this->_debug('Opening a {type} connection to {url}', false, ['type' => $type, 'url' => $url]);
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -757,6 +789,7 @@ class ParticleApi
         // basic auth
         if ($authType === 'basic') {
             if ($this->auth_email && $this->auth_password) {
+                // TODO: add PSR7 headers
                 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
                 curl_setopt($ch, CURLOPT_USERPWD, $this->auth_email . ':' . $this->auth_password);
             } else {
@@ -765,6 +798,7 @@ class ParticleApi
         }
 
         if ($authType === 'basic-dummy') {
+            // TODO: add PSR7 headers
             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
             curl_setopt($ch, CURLOPT_USERPWD, 'particle:particle');
         }
@@ -774,6 +808,15 @@ class ParticleApi
         $this->_debug('Url: {url}', false, ['url' => $url]);
         $this->_debug('Params', false, $params);
         $output = curl_exec($ch);
+
+
+
+$client = new \GuzzleHttp\Client();
+$response = $client->send($request_message, ['timeout' => 2]);
+//var_dump($request_message->getHeaders());
+//$response = $client->patch($request_message->getUri(), ['body' => 'content']);
+
+
 
         $this->_debug(sprintf('Curl Result: {result}', false, ['result' => $output]));
 
