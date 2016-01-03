@@ -13,6 +13,7 @@ namespace articfox1986\phpparticle;
  */
 
 use Psr\Log\LoggerInterface;
+use Exception;
 
 class ParticleApi
 {
@@ -341,21 +342,26 @@ class ParticleApi
 
     /**
      * Runs a particle function on the device. Requires the accessToken to be set
+     * Note: the raw format is documented, but does not seem to affect the returned result.
      *
      * @param string $deviceID The device ID of the device to call the function on
      * @param string $deviceFunction The name function to call
-     * @param string $params The parameters to send to the function (the 'args')
+     * @param string $args Function argument with a maximum length of 63 characters
+     * @param boolean $raw True if you want the just the function return value returned
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
-    public function callFunction($deviceID, $deviceFunction, $params)
+    public function callFunction($deviceID, $deviceFunction, $args, $raw = false)
     {
         $url = $this->getUrl(['devices', $deviceID, $deviceFunction]);
 
-        $result =  $this->_curlRequest($url, ['args' => $params], 'post');
+        $params = ['args' => $args];
 
-        $this->makeRequest('post', $url, ['args' => $params]);
+        if ((bool)$raw) {
+            $params['format'] = 'raw';
+        }
 
+        $result = $this->makeRequest('post', $url, $params);
         return $result;
     }
 
@@ -364,45 +370,45 @@ class ParticleApi
      * 
      * @param string $deviceID The device ID of the device to call the function on
      * @param string $variableName The name of the variable to retrieve
+     * @param boolean $raw Set to true to get just the raw value, without device details.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return 
      */
-    public function getVariable($deviceID, $variableName)
+    public function getVariable($deviceID, $variableName, $raw = false)
     {
-        $url = $this->getUrl(['devices', $deviceID, $variableName]);
+        $url = $this->psr7->createUri($this->getUrl(['devices', $deviceID, $variableName]));
 
-        $result = $this->_curlRequest($url, [], 'get');
+        if ((bool)$raw) {
+            $url = $url->withQueryValue($url, 'format', 'raw');
+        }
 
+        $result = $this->makeRequest('get', $url);
         return $result;
     }
 
     /**
-     * Lists all your cores assigned to your cloud account. Requires the accessToken to be set
+     * List devices the currently authenticated user has access to.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return 
      */
     public function listDevices()
     {
-        $url = $this->getUrl(['devices']) . '/';
-
-        $result = $this->_curlRequest($url, [], 'get');
-
+        $url = $this->getUrl(['devices']);
+        $result = $this->makeRequest('get', $url, []);
         return $result;
     }
 
     /**
-     * Gets your details from your core e.g. function and variables. Requires the accessToken to be set
+     * Get basic information about the given device, including the custom variables and functions it has exposed.
      *
      * @param string $deviceID The device ID of the device
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
-    public function getAttributes($deviceID)
+    public function getDevice($deviceID)
     {
         $url = $this->getUrl(['devices', $deviceID]);
-
-        $result = $this->_curlRequest($url, [], 'get');
-
+        $result = $this->makeRequest('get', $url, []);
         return $result;
     }
 
@@ -414,12 +420,36 @@ class ParticleApi
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
-    public function renameDevice($deviceID,$name)
+    public function renameDevice($deviceID, $name)
     {
         $url = $this->getUrl(['devices', $deviceID]);
+        $result = $this->makeRequest('put', $url, ['name' => $name]);
+        return $result;
+    }
 
-        $result = $this->_curlRequest($url, ['name' => $name], 'put');
+    /**
+     * Generate a device claim code that allows the device to be successfully
+     * claimed to a user's account during the SoftAP setup process.
+     *
+     * @param string|null $iccid ICCID number (SIM card ID number) of the SIM you are generating a claim for. This will be used as the claim code.
+     * @param string|null $imei IMEI number of the Electron you are generating a claim for. This will be used as the claim code if iccid is not specified.
+     *
+     * @return
+     */
+    public function claimCode($iccid = null, $imei = null)
+    {
+        $params = [];
 
+        if (isset($iccid)) {
+            $params['iccid'] = $iccid;
+        } elseif (isset($imei)) {
+            $params['imei'] = $imei;
+        } else {
+            throw new Exception('Neither ICCID nor IMEI were supplied');
+        }
+
+        $url = $this->getUrl(['device_claims']);
+        $result = $this->makeRequest('post', $url, $params);
         return $result;
     }
 
@@ -433,22 +463,24 @@ class ParticleApi
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
-
     public function claimDevice($deviceID, $requestTransfer = false)
     {
         $url = $this->getUrl(['devices']);
 
-        if ($requestTransfer) {
-            $result = $this->_curlRequest($url, ['id' => $deviceID, 'request_transfer' => 'true'], 'post');
-        } else {
-            $result = $this->_curlRequest($url, ['id' => $deviceID, 'request_transfer' => 'false'], 'post');
+        $params = ['id' => $deviceID];
+
+        if ((bool)$requestTransfer) {
+            $params['request_transfer'] = 'true';
         }
+
+        $result = $this->makeRequest('post', $url, $params);
 
         return $result;
     }
 
     /**
-     * Removes the core from your cloud account. Requires the accessToken to be set
+     * Removes the core from your cloud account.
+     * Requires the accessToken to be set
      *
      * @param string $deviceID The device ID of the device to remove from your account. 
      *
@@ -499,48 +531,57 @@ class ParticleApi
     public function listAccessTokens()
     {
         $url = $this->getUrl(['access_tokens']);
-
-        $result = $this->_curlRequest($url, [], 'get', 'basic');
-
+        $result = $this->makeRequest('get', $url, [], 'basic');
         return $result;
     }
 
     /**
-     * Creates a new token on the particle cloud. Requires the email/password auth to be set
+     * Creates an access token that gives you access to the Cloud API.
+     * Requires the email/password auth to be set.
+     * TODO: support full OAuth client login and authorisation using an OAuth library (League should work).
      *
-     * @param int $expires_in When the token should expire (in seconds). Set to false to ignore and use the default. Set to 0 for a token that never expires
-     * @param string $expires_at When the token should expire (at a date/time). Set to false to ignore and use the default. Set to 'null' for a token that never expires. Otherwise this should be a ISO8601 style date string
-     * @param string $clientID The clientID. If you don't have one of these (only used in OAuth applications) set to false
-     * @param string $clientSecret The clientSecret. If you don't have one of these (only used in OAuth applications) set to false
+     * @param int $expires_in How many seconds the token will be valid for. 0 means forever. Short lived tokens are better for security.
+     * @param string $expires_at When should the token expire? This should be an ISO8601 formatted date string.
+     * @param string $clientID The clientID. If you don't have one of these (only used in OAuth applications) set to null.
+     * @param string $clientSecret The clientSecret. If you don't have one of these (only used in OAuth applications) set to null.
      *
      * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
      */
 
-    public function newAccessToken($expires_in = false, $expires_at = false, $clientID = null, $clientSecret = null)
-    {
+    public function newAccessToken(
+        $expires_in = null,
+        $expires_at = null,
+        $clientID = null,
+        $clientSecret = null
+    ) {
+        // The Particle account username and password must be supplied as
+        // parameters.
+        // 'password' is the only grant type documented at present.
         $fields = [
             'grant_type' => 'password',
             'username' => $this->auth_email,
             'password' => $this->auth_password,
         ];
 
-        if ($expires_in !== false) {
+        if (isset($expires_in)) {
             $fields['expires_in'] = intval($expires_in);
         }
 
-        if ($expires_at !== false) {
+        if (isset($expires_at)) {
             $fields['expires_at'] = $expires_at;
         }
 
+        // CHECKME: what are these for? Token renewal?
         if ($clientID && $clientSecret) {
             $fields['client_id'] = $clientID;
             $fields['client_secret'] = $clientSecret;
         }
 
-        // This URL does not have the API version number in the path.
+        // This URL does not have the API version number in its path, so
+        // presumably works for all API versions.
         $url = $this->endpoint . 'oauth/token';
 
-        $result = $this->_curlRequest($url, $fields, 'post', 'basic-dummy');
+        $result = $this->makeRequest('post', $url, $fields, 'basic-dummy');
 
         return $result;
     }
@@ -555,9 +596,7 @@ class ParticleApi
     public function deleteAccessToken($token)
     {
         $url = $this->getUrl(['access_tokens', $token]);
-
-        $result = $this->_curlRequest($url, [], 'delete', 'basic');
-
+        $result = $this->makeRequest('delete', $url, [], 'basic');
         return $result;
     }
 
@@ -586,7 +625,7 @@ class ParticleApi
      */
     public function newWebhook($event, $webhookUrl, array $extras = [])
     {
-        $url = $this->getUrl(['webhooks']) . '/';
+        $url = $this->getUrl(['webhooks']);
 
         $fields = array_merge(['event' => $event, 'url' => $webhookUrl], $extras);
 
@@ -662,7 +701,6 @@ class ParticleApi
 
     /**
      * Returns the URL for the API, with additional path components.
-     * TODO: support single array and varargs.
      *
      * @return string The URL without a trailing slash.
      */
@@ -677,28 +715,68 @@ class ParticleApi
         return $url;
     }
 
-    protected function makeRequest($type, $url, $params = [])
+    protected function makeRequest($type, $uri, $params = [], $authType = 'token')
     {
-        echo "<pre>";
+        if (is_string($uri)) {
+            $uri = $this->psr7->createUri($uri);
+        }
 
-        $uri = $this->psr7->createUri($url);
+        // Add params as GET parameters to the URI if this is a GET request.
+        // CHECKME: and a DELETE request?
+        if (($type === 'get' || $type === 'delete') && $params) {
+            foreach($params as $key => $value) {
+                $uri = $uri->withQueryValue($uri, $key, $value);
+            }
+        }
 
         $request = $this->psr7->createRequest(($type == 'put-file' ? 'put' : $type), $uri);
 
-        $body = $this->psr7->createStreamForString(http_build_query($params));
-        $request = $request->withBody($body);
-        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+        // Add only POST parameters to the message.
+        // TODO: put-file needs a different Content-Type
+        if ($type === 'post' || $type === 'put' || $type === 'put-file') {
+            $body = $this->psr7->createStreamForString(http_build_query($params));
+            $request = $request->withBody($body);
+            $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+        }
 
-        // TODO: only when the authType is "none"
-        $request = $request->withHeader('Authorization', 'Bearer ' . $this->accessToken);
+        if ($authType === 'token') {
+            if ($this->accessToken) {
+                // Add the access token to the parameters, but not for get-file. (CHECKME to confirm)
+                if ($type !== 'get-file') {
+                    $request = $request->withHeader('Authorization', 'Bearer ' . $this->accessToken);
+                }
+            } else {
+                throw new Exception('No access token set');
+            }
+        }
 
-        $client = new \GuzzleHttp\Client();
+        if ($authType === 'basic') {
+            if ($this->auth_email && $this->auth_password) {
+                $request = $request->withHeader(
+                    'Authorization',
+                    'Basic ' . base64_encode($this->auth_email . ':' . $this->auth_password)
+                );
+            } else {
+                throw new Exception('No auth credentials (email/password) set');
+            }
+        }
 
-        $response = $client->send($request, ['timeout' => 2]);
+        if ($authType === 'basic-dummy') {
+            $request = $request->withHeader(
+                'Authorization',
+                'Basic ' . base64_encode('particle:particle')
+            );
+        }
 
-        var_dump($response);
-        var_dump((string)$request->getBody());
-        var_dump((string)$response->getBody());
+        // TODO: Get the client from the connector.
+        $client = new \GuzzleHttp\Client(['defaults' => ['timeout' => $this->curlTimeout]]);
+
+        // TODO: catch exceptions, store the result and return something more appropriate.
+        // Maybe just return the message, so it can be sent as desired (e.g. synch/asynch).
+        $response = $client->send($request);
+
+        // TODO: return a more appropriate result, e.g. a stream or a PHP array.
+        return $response;
     }
 
     /**
@@ -707,15 +785,15 @@ class ParticleApi
      * @param string url The url to call
      * @param mixed[] params An array of parameters to pass to the url
      * @param string type The type of request ("GET", "POST", "PUT", etc)
-     * @param string authType The type of authorization to use ('none' uses the access token, 'basic' uses basic auth with the email/password auth details, and 'basic-dummy' uses dummy basic auth details)
+     * @param string authType The type of authorization to use ('token' uses the access token, 'basic' uses basic auth with the email/password auth details, and 'basic-dummy' uses dummy basic auth details)
      *
      * @return boolean true on success, false on failure
      */
-    protected function _curlRequest($url, $params = [], $type = 'post', $authType = 'none')
+    protected function _curlRequest($url, $params = [], $type = 'post', $authType = 'token')
     {
         $uri = $this->psr7->createUri($url);
 
-        if ($authType === 'none') {
+        if ($authType === 'token') {
             if ($this->accessToken) {
                 // Add the access token to the parameters, but not for get-file.
                 if ($type !== 'get-file') {
@@ -726,20 +804,6 @@ class ParticleApi
                 throw new Exception('No access token set');
             }
         }
-
-        // Add GET parameters to URI if a GET request.
-        if (($type === 'get' || $type === 'delete') && $params) {
-            foreach($params as $key => $value) {
-                $uri = $uri->withQueryValue($uri, $key, $value);
-            }
-        }
-
-        if ($type === 'put-file') {
-            //$uri = $uri->withQueryValue($uri, 'access_token', $this->accessToken);
-        }
-//var_dump($params); die("URI=" . (string)$uri);
-
-//        var_dump($request_message);
 
         // Is cURL installed?
         if ( ! function_exists('curl_init')) {
@@ -779,16 +843,6 @@ class ParticleApi
                 throw new Exception(sprintf('Unsupported method type (%s)', $type));
         }
 
-        $request_message = $this->psr7->createRequest(($type == 'put-file' ? 'put' : $type), $uri);
-
-        if ($type !== 'get' && $type !== 'delete') {
-            unset($params['access_token']);
-            $body = $this->psr7->createStreamForString(http_build_query($params));
-            $request_message = $request_message->withBody($body);
-            $request_message = $request_message->withHeader('Content-Type', 'application/x-www-form-urlencoded');
-        }
-        //var_dump($request_message);
-
         $this->_debug('Opening a {type} connection to {url}', false, ['type' => $type, 'url' => $url]);
         curl_setopt($ch, CURLOPT_URL, $url);
 
@@ -818,7 +872,6 @@ class ParticleApi
         // basic auth
         if ($authType === 'basic') {
             if ($this->auth_email && $this->auth_password) {
-                // TODO: add PSR7 headers
                 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
                 curl_setopt($ch, CURLOPT_USERPWD, $this->auth_email . ':' . $this->auth_password);
             } else {
@@ -827,7 +880,6 @@ class ParticleApi
         }
 
         if ($authType === 'basic-dummy') {
-            // TODO: add PSR7 headers
             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
             curl_setopt($ch, CURLOPT_USERPWD, 'particle:particle');
         }
@@ -837,19 +889,6 @@ class ParticleApi
         $this->_debug('Url: {url}', false, ['url' => $url]);
         $this->_debug('Params', false, $params);
         $output = curl_exec($ch);
-
-/*
-echo "<pre>";
-$client = new \GuzzleHttp\Client();
-//$client->setPostField('access_token', $this->accessToken);
-$request_message = $request_message->withHeader('Authorization', 'Bearer ' . $this->accessToken);
-//$request_message = $request_message->withHeader('Content-Type', 'application/x-www-form-urlencoded');
-$response = $client->send($request_message, ['timeout' => 2]);
-//var_dump($response);
-//var_dump((string)$request_message->getBody());
-//var_dump((string)$response->getBody());
-//var_dump($request_message->getHeaders());
-*/
 
         $this->_debug(sprintf('Curl Result: {result}', false, ['result' => $output]));
 
