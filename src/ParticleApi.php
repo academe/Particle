@@ -350,11 +350,13 @@ class ParticleApi
      */
     public function callFunction($deviceID, $deviceFunction, $params)
     {
-            $url = $this->getUrl(['devices', $deviceID, $deviceFunction]);
+        $url = $this->getUrl(['devices', $deviceID, $deviceFunction]);
 
-            $result =  $this->_curlRequest($url, ['args' => $params], 'post');
+        $result =  $this->_curlRequest($url, ['args' => $params], 'post');
 
-            return $result;
+        $this->makeRequest('post', $url, ['args' => $params]);
+
+        return $result;
     }
 
     /**
@@ -675,6 +677,30 @@ class ParticleApi
         return $url;
     }
 
+    protected function makeRequest($type, $url, $params = [])
+    {
+        echo "<pre>";
+
+        $uri = $this->psr7->createUri($url);
+
+        $request = $this->psr7->createRequest(($type == 'put-file' ? 'put' : $type), $uri);
+
+        $body = $this->psr7->createStreamForString(http_build_query($params));
+        $request = $request->withBody($body);
+        $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        // TODO: only when the authType is "none"
+        $request = $request->withHeader('Authorization', 'Bearer ' . $this->accessToken);
+
+        $client = new \GuzzleHttp\Client();
+
+        $response = $client->send($request, ['timeout' => 2]);
+
+        var_dump($response);
+        var_dump((string)$request->getBody());
+        var_dump((string)$response->getBody());
+    }
+
     /**
      * Performs a CURL Request with the given parameters
      *
@@ -693,7 +719,8 @@ class ParticleApi
             if ($this->accessToken) {
                 // Add the access token to the parameters, but not for get-file.
                 if ($type !== 'get-file') {
-                    $params['access_token'] = $this->accessToken;
+                    // Actually, don't. Add it as a header.
+                    //$params['access_token'] = $this->accessToken;
                 }
             } else {
                 throw new Exception('No access token set');
@@ -708,10 +735,9 @@ class ParticleApi
         }
 
         if ($type === 'put-file') {
-            $uri = $uri->withQueryValue($uri, 'access_token', $this->accessToken);
+            //$uri = $uri->withQueryValue($uri, 'access_token', $this->accessToken);
         }
 //var_dump($params); die("URI=" . (string)$uri);
-        $request_message = $this->psr7->createRequest(($type == 'put-file' ? 'put' : $type), $uri);
 
 //        var_dump($request_message);
 
@@ -753,12 +779,15 @@ class ParticleApi
                 throw new Exception(sprintf('Unsupported method type (%s)', $type));
         }
 
+        $request_message = $this->psr7->createRequest(($type == 'put-file' ? 'put' : $type), $uri);
+
         if ($type !== 'get' && $type !== 'delete') {
+            unset($params['access_token']);
             $body = $this->psr7->createStreamForString(http_build_query($params));
-//echo " START " . (string)$body . " END ";
             $request_message = $request_message->withBody($body);
+            $request_message = $request_message->withHeader('Content-Type', 'application/x-www-form-urlencoded');
         }
-        var_dump($request_message);
+        //var_dump($request_message);
 
         $this->_debug('Opening a {type} connection to {url}', false, ['type' => $type, 'url' => $url]);
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -809,14 +838,18 @@ class ParticleApi
         $this->_debug('Params', false, $params);
         $output = curl_exec($ch);
 
-
-
+/*
+echo "<pre>";
 $client = new \GuzzleHttp\Client();
+//$client->setPostField('access_token', $this->accessToken);
+$request_message = $request_message->withHeader('Authorization', 'Bearer ' . $this->accessToken);
+//$request_message = $request_message->withHeader('Content-Type', 'application/x-www-form-urlencoded');
 $response = $client->send($request_message, ['timeout' => 2]);
+//var_dump($response);
+//var_dump((string)$request_message->getBody());
+//var_dump((string)$response->getBody());
 //var_dump($request_message->getHeaders());
-//$response = $client->patch($request_message->getUri(), ['body' => 'content']);
-
-
+*/
 
         $this->_debug(sprintf('Curl Result: {result}', false, ['result' => $output]));
 
