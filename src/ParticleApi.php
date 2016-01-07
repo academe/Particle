@@ -43,6 +43,7 @@ class ParticleApi
 
     protected $apiVersion = 'v1';
 
+    // The \articfox1986\phpparticle\ConnnectorInterface object for supplying PSR-7 messages.
     protected $psr7;
 
     public function __construct(ConnnectorInterface $psr7)
@@ -56,7 +57,6 @@ class ParticleApi
      * @param string $endpoint A url for the api you want to use (default: "https://api.particle.io/")
      *
      * @return self
-     *
      */
     public function setEndpoint($endpoint)
     {
@@ -84,12 +84,11 @@ class ParticleApi
     }
 
     /**
-     * Sets the timeout used for calls against the api. 
+     * Sets the timeout used for calls to the api. 
      *
-     * @param int $timeout The amount of time, in seconds, for a call to wait for data before returning with a TIMEOUT error
+     * @param int $timeout The time, in seconds, for a call to wait for data before returning with a TIMEOUT error.
      *
-     * @return void
-     *
+     * @return self
      */
     public function setTimeout($timeout)
     {
@@ -112,13 +111,12 @@ class ParticleApi
     }
 
     /**
-     * Sets the authentication details for authenticating with the account over the API.
+     * Sets the authentication details for the Particle cloud account.
      *
-     * @param string $email The email to authenticate with
-     * @param string $password The password to authenticate with
+     * @param string $email The account email.
+     * @param string $password The account password.
      *
      * @return self
-     *
      */
     public function setAuth($email, $password)
     {
@@ -149,12 +147,10 @@ class ParticleApi
     }
 
     /**
-     * Clears all the authentication info (email and password).
-     * Internally set to null.
+     * Clears the cloud account authentication info (email and password).
      * Subsequent calls which require a email/password will fail.
      *
      * @return self
-     *
      */
     public function clearAuth()
     {
@@ -162,12 +158,11 @@ class ParticleApi
     }
 
     /**
-     * Sets the access token for authenticating with the API
+     * Sets the access token for Basic authentication with the API.
      *
-     * @param string $accessToken The access token to authenticate with
+     * @param string $accessToken The access token to authenticate with.
      *
      * @return self
-     *
      */
     public function setAccessToken($accessToken)
     {
@@ -186,10 +181,10 @@ class ParticleApi
     }
 
     /**
-     * Clears the access token info. Internally set to false. Subsequent calls which require an access token will fail
+     * Clears the access token info. Internally set to null.
+     * Subsequent calls which require an access token will fail.
      *
      * @return self
-     *
      */
     public function clearAccessToken()
     {
@@ -202,7 +197,6 @@ class ParticleApi
      * @param Psr\Log\LoggerInterface $debugLogger Object to handle all logged messages.
      *
      * @return self
-     *
      */
     public function setLogger(LoggerInterface $debugLogger)
     {
@@ -222,12 +216,11 @@ class ParticleApi
 
     /**
      * Turn internal debugging on or off.
-     * Note, external calls made to debug() will always display regardless of this setting.
+     * Note: calls made to debug() will always be logged regardless of this setting.
      *
-     * @param boolean $debug true turns on internal debugging & false turns off internal debugging
+     * @param boolean $debug true turns internal debugging on.
      *
      * @return self
-     *
      */
     public function setDebug($debug)
     {
@@ -237,7 +230,7 @@ class ParticleApi
     }
 
     /**
-     * Gets whether debug is on or off
+     * Gets whether debug is on or off.
      * @return boolean
      */
     public function getDebug()
@@ -246,6 +239,7 @@ class ParticleApi
     }
 
     /**
+     * TODO: move this to the HTTP client.
      * Turn on or off SSL verification (it's a CURL thing).
      * For testing, before you get the certificates setup, you might need to disable SSL verificatioon.
      * Note this is a security concern
@@ -253,7 +247,6 @@ class ParticleApi
      * @param boolean $disableSSL true communicates with api endpoints without validating security certificates
      *
      * @return self
-     *
      */
     public function setDisableSSL($disableSSL)
     {
@@ -263,7 +256,8 @@ class ParticleApi
     }
 
     /**
-     * Gets the whether ssls are disabled
+     * TODO: move this to the HTTP client.
+     * Gets the whether SSL strict checking is disabled
      * @return boolean
      */
     public function getDisableSSL()
@@ -272,6 +266,7 @@ class ParticleApi
     }
 
     /**
+     * TODO: move this to the HTTP client.
      * Sets the internal _error & _errorSource variables.
      * Allow for tracking which function resulted in an error and what that error was
      *
@@ -279,7 +274,6 @@ class ParticleApi
      * @param string $errorSource The value to set _errorSource to
      *
      * @return void
-     *
      */
     protected function _setError($errorText, $errorSource)
     {
@@ -288,12 +282,12 @@ class ParticleApi
     }
 
     /**
+     * TODO: move this to the HTTP client.
      * Sets the internal _errorSource. Allow for tracking which function resulted in an error
      *
      * @param string $errorSource The value to set _errorSource to
      *
      * @return void
-     *
      */
     protected function _setErrorSource($errorSource)
     {
@@ -301,14 +295,13 @@ class ParticleApi
     }
 
     /**
-     * Outputs the desired debug text formatted if required
+     * Sends debug text and data to the debug logger.
      *
-     * @param string $debugText The debug string to output
-     * @param boolean $override If set to true overrides the internal debug on/off state and always outputs the debugText. If set to false it follows the internal debug on/off state
-     * @param null|array $context Substribution fields or other details to support the debug message.
+     * @param string $debugText The debug string to log.
+     * @param boolean $override True to override the internal debug on/off state and always outputs the debugText. If set to false it follows the internal debug on/off state.
+     * @param null|array $context Substitution fields and other details to support the debug message.
      *
      * @return void
-     *
      */
     protected function _debug($debugText, $override = false, array $context = [])
     {
@@ -318,7 +311,7 @@ class ParticleApi
     }
 
     /**
-     * Logs a debug message and optional substituyion variables/context details.
+     * Logs a debug message and optional substitution variables/context details.
      *
      * @param string $debugText The debug string to output
      * @return void
@@ -349,7 +342,7 @@ class ParticleApi
      * @param string $args Function argument with a maximum length of 63 characters
      * @param boolean $raw True if you want the just the function return value returned
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function callFunction($deviceID, $deviceFunction, $args, $raw = false)
     {
@@ -357,6 +350,7 @@ class ParticleApi
 
         $params = ['args' => $args];
 
+        // Set the raw return format if required.
         if ((bool)$raw) {
             $params['format'] = 'raw';
         }
@@ -366,18 +360,19 @@ class ParticleApi
     }
 
     /**
-     * Gets the value of a particle variable. Requires the accessToken to be set
+     * Gets the value of a particle variable.
      * 
      * @param string $deviceID The device ID of the device to call the function on
      * @param string $variableName The name of the variable to retrieve
      * @param boolean $raw Set to true to get just the raw value, without device details.
      *
-     * @return 
+     * @return TBC
      */
     public function getVariable($deviceID, $variableName, $raw = false)
     {
         $url = $this->psr7->createUri($this->getUrl(['devices', $deviceID, $variableName]));
 
+        // Set the raw return format if required.
         if ((bool)$raw) {
             $url = $url->withQueryValue($url, 'format', 'raw');
         }
@@ -387,9 +382,9 @@ class ParticleApi
     }
 
     /**
-     * List devices the currently authenticated user has access to.
+     * List devices the authenticated user has access to.
      *
-     * @return 
+     * @return TBC
      */
     public function listDevices()
     {
@@ -403,7 +398,7 @@ class ParticleApi
      *
      * @param string $deviceID The device ID of the device
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function getDevice($deviceID)
     {
@@ -413,12 +408,12 @@ class ParticleApi
     }
 
     /**
-     * Set the name/renames your core. Requires the accessToken to be set
+     * Set the name/renames your core.
      *
      * @param string $deviceID The device ID of the device to rename
      * @param string $name The new name of the device
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function renameDevice($deviceID, $name)
     {
@@ -434,7 +429,7 @@ class ParticleApi
      * @param string|null $iccid ICCID number (SIM card ID number) of the SIM you are generating a claim for. This will be used as the claim code.
      * @param string|null $imei IMEI number of the Electron you are generating a claim for. This will be used as the claim code if iccid is not specified.
      *
-     * @return
+     * @return TBC
      */
     public function claimCode($iccid = null, $imei = null)
     {
@@ -454,19 +449,18 @@ class ParticleApi
     }
 
     /**
-     * Attempts to add a device to your cloud account. Requires the accessToken to be set.
-     * Note, you may want to follow this up with a call to "setName" as new Core's names are blank.
-     * Interestingly, if claiming an order core their name is retained across the unclaim/claim process
+     * Attempts to add a device to your cloud account.
+     * Note, you may want to follow this up with a call to "setName" as new Cores names are blank.
+     * Interestingly, if claiming an order core their name is retained across the unclaim/claim process.
      *
      * @param string $deviceID The device ID of the device to claim. 
      * @param boolean $requestTransfer true to request the already-claimed device be transfered to your account. If false will try to claim but not automatically send a transfer request.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function claimDevice($deviceID, $requestTransfer = false)
     {
         $url = $this->getUrl(['devices']);
-
         $params = ['id' => $deviceID];
 
         if ((bool)$requestTransfer) {
@@ -474,59 +468,63 @@ class ParticleApi
         }
 
         $result = $this->makeRequest('post', $url, $params);
-
         return $result;
     }
 
     /**
      * Removes the core from your cloud account.
-     * Requires the accessToken to be set
      *
-     * @param string $deviceID The device ID of the device to remove from your account. 
+     * @param string $deviceID The device ID of the device to remove from your account.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function removeDevice($deviceID)
     {
-        $url = $this->getUrl(['devices', $deviceID]) . '/';
+        $url = $this->getUrl(['devices', $deviceID]);
 
-        $result = $this->_curlRequest($url, [], 'delete');
-
+        $result = $this->makeRequest('delete', $url, []);
         return $result;
     }
 
     /**
-     * Uploads a sketch to the core. Requires the accessToken to be set
+     * Uploads a sketch to the core.
      *
-     * @param string $deviceID The device ID of the device to upload the code to
-     * @param string $filename The filename of the firmware file to upload to the device. Ex: tinker.cpp. Not yet implemented
-     * @param string $filepath The path to the firmware file to upload (including the name). Ex: path/to/tinker.cpp
-     * @param boolean $isBinary Set to true if uploading a .bin file or false otherwise.
+     * @param string $deviceID The device ID of the device to upload the code to.
+     * @param string $filename The filename of the firmware file to upload to the device. e.g. tinker.cpp.
+     * @param string $filepath The path to the firmware file to upload (including the name). e.g. path/to/tinker.cpp
+     * @param boolean $isBinary Set to true if uploading a .bin file or false for non-binary source code.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function uploadFirmware($deviceID, $filename, $filepath, $isBinary = false)
     {
-        // Create a CURLFile object
-        $cfile = new CURLFile($filepath, 'application/octet-stream', $filename);
-
         $url = $this->getUrl(['devices', $deviceID]);
 
-        $params = ['file' => $cfile];
+        // TODO: support passing in a stream or resource.
+        $file_stream = $this->psr7->createStream(fopen($filepath, 'r'));
+
+        $params = [
+            'file' => [
+                'contents' => $file_stream,
+                'filename' => $filename,
+                'headers' => ['Content-Type' => 'application/octet-stream']
+            ]
+        ];
 
         if ($isBinary === true) {
             $params['file_type'] = 'binary';
         }
 
-        $result = $this->_curlRequest($url, $params, 'put-file');
-
+        // The file will be encoded in multipart/form-data format
+        $result = $this->makeRequest('put', $url, $params, 'token', true);
         return $result; 
     }
 
     /**
-     * Gets a list of your tokens from the particle cloud. Requires the email/password auth to be set
+     * Gets a list of your tokens from the particle cloud.
+     * Requires the email/password (account) auth to be set.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function listAccessTokens()
     {
@@ -545,7 +543,7 @@ class ParticleApi
      * @param string $clientID The clientID. If you don't have one of these (only used in OAuth applications) set to null.
      * @param string $clientSecret The clientSecret. If you don't have one of these (only used in OAuth applications) set to null.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
 
     public function newAccessToken(
@@ -582,16 +580,16 @@ class ParticleApi
         $url = $this->endpoint . 'oauth/token';
 
         $result = $this->makeRequest('post', $url, $fields, 'basic-dummy');
-
         return $result;
     }
 
     /**
-     * Removes the token from the particle cloud. Requires the email/password auth to be set
+     * Removes the token from the particle cloud.
+     * Requires the email/password auth to be set.
      *
      * @param string $token The access token to remove
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function deleteAccessToken($token)
     {
@@ -603,50 +601,51 @@ class ParticleApi
     /**
      * Gets a list of webhooks from the particle cloud. Requires the accessToken to be set
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function listWebhooks()
     {
         $fields = [];
         $url = $this->getUrl(['webhooks']);
 
-        $result = $this->_curlRequest($url, $fields, 'get');
-
+        $result = $this->makeRequest('get', $url, $fields);
         return $result;
     }
 
     /**
-     * Creates a new webhook on the particle cloud. Requires the accessToken to be set
+     * Creates a new webhook on the particle cloud.
      * @param string $event The event name used to trigger the webhook
      * @param string $webhookUrl The url to query once the event has occured
      * @param string $extras See http://docs.particle.io/webhooks/#webhook-options
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function newWebhook($event, $webhookUrl, array $extras = [])
     {
         $url = $this->getUrl(['webhooks']);
 
-        $fields = array_merge(['event' => $event, 'url' => $webhookUrl], $extras);
+        $fields = ['event' => $event, 'url' => $webhookUrl];
 
-        $result = $this->_curlRequest($url, $fields , 'post');
+        if ( ! empty($extras)) {
+            $fields = array_merge($fields, $extras);
+        }
 
+        $result = $this->makeRequest('post', $url, $fields);
         return $result;
     }
 
     /**
-     * Delete webhooks from the particle cloud. Requires the accessToken to be set
+     * Delete webhooks from the particle cloud.
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function deleteWebhook($webhookID)
     {
         $fields = [];
 
-        $url = $this->getUrl(['webhooks', $webhookID]) . '/';
+        $url = $this->getUrl(['webhooks', $webhookID]);
 
-        $result = $this->_curlRequest($url, $fields, 'delete');
-
+        $result = $this->makeRequest('delete', $url, $fields);
         return $result;
     }
 
@@ -656,7 +655,7 @@ class ParticleApi
      * @param string $deviceID The device ID of the device to send the signal mode state change command to.
      * @param int $signalState The signal state: 0 returns the RGB led back to normmal & 1 makes it flash a rainbow of color
      *
-     * @return boolean true if the call was successful, false otherwise. Use getResult to get the api result and use getError & getErrorSource to determine what happened in the event of an error
+     * @return TBC
      */
     public function signalDevice($deviceID, $signalState = 0)
     {
@@ -664,12 +663,12 @@ class ParticleApi
 
         $url = $this->getUrl(['devices', $deviceID]) . '/';
 
-        $result = $this->_curlRequest($url, $fields, 'put');
-
+        $result = $this->makeRequest('put', $url, $fields);
         return $result;
     }
 
     /**
+     * TODO: move this to the HTTP client.
      * Returns the latest error
      *
      * @return string The latest error
@@ -680,6 +679,7 @@ class ParticleApi
     }
 
     /**
+     * TODO: move this to the HTTP client.
      * Returns the latest error's source (which function cause the error)
      *
      * @return string The latest error's source
@@ -715,7 +715,10 @@ class ParticleApi
         return $url;
     }
 
-    protected function makeRequest($type, $uri, $params = [], $authType = 'token')
+    /**
+     * TODO: for sending files, perhaps put that onto a separate parameter as a stream.
+     */
+    protected function makeRequest($type, $uri, $params = [], $authType = 'token', $useMultipart = false)
     {
         if (is_string($uri)) {
             $uri = $this->psr7->createUri($uri);
@@ -729,22 +732,30 @@ class ParticleApi
             }
         }
 
-        $request = $this->psr7->createRequest(($type == 'put-file' ? 'put' : $type), $uri);
+        // Create a PSR-7 Request message.
+        $request = $this->psr7->createRequest($type, $uri);
 
-        // Add only POST parameters to the message.
-        // TODO: put-file needs a different Content-Type
-        if ($type === 'post' || $type === 'put' || $type === 'put-file') {
-            $body = $this->psr7->createStreamForString(http_build_query($params));
-            $request = $request->withBody($body);
-            $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+        if ($type === 'post' || $type === 'put') {
+            if ($useMultipart) {
+                // Add POST parameters that include files, to the body.
+
+                // We create the boundary here so we are not locked into a specific multipart stream implementation.
+                $boundary = uniqid();
+                $body = $this->psr7->createStreamForMultipart($params, $boundary);
+                $request = $request->withBody($body);
+                $request = $request->withHeader('Content-Type', 'multipart/form-data; boundary=' . $boundary);
+            } else {
+                // Add simple POST parameters to the message body.
+                $body = $this->psr7->createStreamForUrlEncoded($params);
+                $request = $request->withBody($body);
+                $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
+            }
         }
 
         if ($authType === 'token') {
             if ($this->accessToken) {
-                // Add the access token to the parameters, but not for get-file. (CHECKME to confirm)
-                if ($type !== 'get-file') {
-                    $request = $request->withHeader('Authorization', 'Bearer ' . $this->accessToken);
-                }
+                // Add the access token to the parameters.
+                $request = $request->withHeader('Authorization', 'Bearer ' . $this->accessToken);
             } else {
                 throw new Exception('No access token set');
             }
@@ -769,6 +780,7 @@ class ParticleApi
         }
 
         // TODO: Get the client from the connector.
+        // Or just return the message at this point.
         $client = new \GuzzleHttp\Client(['defaults' => ['timeout' => $this->curlTimeout]]);
 
         // TODO: catch exceptions, store the result and return something more appropriate.
@@ -795,8 +807,8 @@ class ParticleApi
 
         if ($authType === 'token') {
             if ($this->accessToken) {
-                // Add the access token to the parameters, but not for get-file.
-                if ($type !== 'get-file') {
+                // Add the access token to the parameters, but not for put-file.
+                if ($type !== 'put-file') {
                     // Actually, don't. Add it as a header.
                     //$params['access_token'] = $this->accessToken;
                 }

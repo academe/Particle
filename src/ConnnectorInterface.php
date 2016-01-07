@@ -53,4 +53,21 @@ interface ConnnectorInterface
      * @throws \RuntimeException         If creating the stream from $body fails. 
      */
     public function createStream($body = null);
+
+    /**
+     * @return StreamInterface
+     */
+    public function createStreamForUrlEncoded(array $params = []);
+
+    /**
+     * Takes an array of fields and returns as a multipart/form-data stream.
+     * Each field is an array keyed on "name" and with "contents" elements, and optional
+     * "filename" and "headers" elements, or a string.
+     * e.g. [
+     *  'file' => ['contents' => $fileStreamOrString, 'filename' => 'myfile.cpp'],
+     *  'file_type' => 'binary,'
+     * ]
+     * @return StreamInterface
+     */
+    public function createStreamForMultipart(array $params, $boundary);
 }
