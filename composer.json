@@ -25,6 +25,10 @@
     "require-dev": {
         "phpunit/phpunit": "4.0.*"
     },
+    "suggest": {
+        "guzzlehttp/psr7": "PSR-7 message implementation",
+	"guzzlehttp/guzzle": "HTML client supporting PSR-7 messages"
+    },
     "autoload": {
         "psr-4": {
             "articfox1986\\phpparticle\\": "src"

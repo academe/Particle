@@ -13,6 +13,7 @@ namespace articfox1986\phpparticle;
  */
 
 use Psr\Log\LoggerInterface;
+use Psr\Http\Message\UriInterface;
 use Exception;
 
 class ParticleApi
@@ -43,9 +44,12 @@ class ParticleApi
     // The \articfox1986\phpparticle\ConnnectorInterface object for supplying PSR-7 messages.
     protected $psr7;
 
-    public function __construct(ConnnectorInterface $psr7)
+    /**
+     * @param articfox1986\phpparticle\ConnnectorInterface $psr7Connector Object that provides PSR-7 messages.
+     */
+    public function __construct(ConnnectorInterface $psr7Connector)
     {
-        $this->psr7 = $psr7;
+        $this->psr7 = $psr7Connector;
     }
 
     /**
@@ -64,6 +68,7 @@ class ParticleApi
 
     /**
      * Gets the API endpoint used
+     *
      * @return string
      */
     public function getEndpoint()
@@ -73,6 +78,7 @@ class ParticleApi
 
     /**
      * Gets the API version path component.
+     *
      * @return string
      */
     public function getApiVersion()
@@ -100,6 +106,7 @@ class ParticleApi
 
     /**
      * Gets the CURL timeout
+     *
      * @return double
      */
     public function getTimeout()
@@ -126,7 +133,8 @@ class ParticleApi
     }
 
     /**
-     * Gets the auth email.
+     * Gets the Particle cloud account auth email.
+     *
      * @return string
      */
     public function getEmail()
@@ -135,7 +143,8 @@ class ParticleApi
     }
 
     /**
-     * Gets the auth password.
+     * Gets the Particle cloud account auth password.
+     *
      * @return string
      */
     public function getPassword()
@@ -145,7 +154,6 @@ class ParticleApi
 
     /**
      * Clears the cloud account authentication info (email and password).
-     * Subsequent calls which require a email/password will fail.
      *
      * @return self
      */
@@ -170,6 +178,7 @@ class ParticleApi
 
     /**
      * Gets the Access Token
+     *
      * @return string
      */
     public function getAccessToken()
@@ -179,7 +188,6 @@ class ParticleApi
 
     /**
      * Clears the access token info. Internally set to null.
-     * Subsequent calls which require an access token will fail.
      *
      * @return self
      */
@@ -228,6 +236,7 @@ class ParticleApi
 
     /**
      * Gets whether debug is on or off.
+     *
      * @return boolean
      */
     public function getDebug()
@@ -255,6 +264,7 @@ class ParticleApi
     /**
      * TODO: move this to the HTTP client.
      * Gets the whether SSL strict checking is disabled
+     *
      * @return boolean
      */
     public function getDisableSSL()
@@ -282,23 +292,12 @@ class ParticleApi
      * Logs a debug message and optional substitution variables/context details.
      *
      * @param string $debugText The debug string to output
+     *
      * @return void
      */
     public function debug($debugText, array $context = [])
     {
-        $this->_debug($debugText, $override = true, $context);
-    }
-
-    /**
-     * Logs the desired debug array. Use debug() instead.
-     *
-     * @deprecated
-     * @param string $debugArray The debug array to log
-     * @return void
-     */
-    public function debug_r(array $debugArray)
-    {
-        return $this->_debug('Data', $override = true, $debugArray);
+        return $this->_debug($debugText, true, $context);
     }
 
     /**
@@ -310,7 +309,7 @@ class ParticleApi
      * @param string $args Function argument with a maximum length of 63 characters
      * @param boolean $raw True if you want the just the function return value returned
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function callFunction($deviceID, $deviceFunction, $args, $raw = false)
     {
@@ -334,7 +333,7 @@ class ParticleApi
      * @param string $variableName The name of the variable to retrieve
      * @param boolean $raw Set to true to get just the raw value, without device details.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function getVariable($deviceID, $variableName, $raw = false)
     {
@@ -352,7 +351,7 @@ class ParticleApi
     /**
      * List devices the authenticated user has access to.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function listDevices()
     {
@@ -366,7 +365,7 @@ class ParticleApi
      *
      * @param string $deviceID The device ID of the device
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function getDevice($deviceID)
     {
@@ -381,7 +380,7 @@ class ParticleApi
      * @param string $deviceID The device ID of the device to rename
      * @param string $name The new name of the device
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function renameDevice($deviceID, $name)
     {
@@ -397,7 +396,7 @@ class ParticleApi
      * @param string|null $iccid ICCID number (SIM card ID number) of the SIM you are generating a claim for. This will be used as the claim code.
      * @param string|null $imei IMEI number of the Electron you are generating a claim for. This will be used as the claim code if iccid is not specified.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function claimCode($iccid = null, $imei = null)
     {
@@ -424,7 +423,7 @@ class ParticleApi
      * @param string $deviceID The device ID of the device to claim. 
      * @param boolean $requestTransfer true to request the already-claimed device be transfered to your account. If false will try to claim but not automatically send a transfer request.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function claimDevice($deviceID, $requestTransfer = false)
     {
@@ -444,7 +443,7 @@ class ParticleApi
      *
      * @param string $deviceID The device ID of the device to remove from your account.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function removeDevice($deviceID)
     {
@@ -455,21 +454,31 @@ class ParticleApi
     }
 
     /**
-     * Uploads a sketch to the core.
+     * Uploads a source or compiled firmware file to the core.
+     * CHECKME: Should the content type change depending on whether the file content is
+     * binary or not? Maybe text/plain for a non-binary file?
      *
      * @param string $deviceID The device ID of the device to upload the code to.
      * @param string $filename The filename of the firmware file to upload to the device. e.g. tinker.cpp.
-     * @param string $filepath The path to the firmware file to upload (including the name). e.g. path/to/tinker.cpp
+     * @param string|resource $file The path to the firmware file to upload (including the name). e.g. path/to/tinker.cpp
      * @param boolean $isBinary Set to true if uploading a .bin file or false for non-binary source code.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
-    public function uploadFirmware($deviceID, $filename, $filepath, $isBinary = false)
+    public function uploadFirmware($deviceID, $filename, $file, $isBinary = false)
     {
         $url = $this->getUrl(['devices', $deviceID]);
 
-        // TODO: support passing in a stream or resource.
-        $file_stream = $this->psr7->createStream(fopen($filepath, 'r'));
+        if (is_string($file)) {
+            $resource = fopen($file, 'r');
+        } elseif (is_resource($file)) {
+            // CHECKME: should we rewind the file? I have a feeling the PSR-7 message should do that anyway.
+            $resource = $file;
+        } else {
+            throw new Exception('Unexpected file data type; must be open resource or path');
+        }
+
+        $file_stream = $this->psr7->createStream($resource);
 
         $params = [
             'file' => [
@@ -492,7 +501,7 @@ class ParticleApi
      * Gets a list of your tokens from the particle cloud.
      * Requires the email/password (account) auth to be set.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function listAccessTokens()
     {
@@ -511,7 +520,7 @@ class ParticleApi
      * @param string $clientID The clientID. If you don't have one of these (only used in OAuth applications) set to null.
      * @param string $clientSecret The clientSecret. If you don't have one of these (only used in OAuth applications) set to null.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
 
     public function newAccessToken(
@@ -557,7 +566,7 @@ class ParticleApi
      *
      * @param string $token The access token to remove
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function deleteAccessToken($token)
     {
@@ -569,7 +578,7 @@ class ParticleApi
     /**
      * Gets a list of webhooks from the particle cloud. Requires the accessToken to be set
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function listWebhooks()
     {
@@ -636,16 +645,6 @@ class ParticleApi
     }
 
     /**
-     * Returns the latest result
-     *
-     * @return string The latest result from calling a cloud function
-     */
-    public function getResult()
-    {
-        return $this->result;
-    }
-
-    /**
      * Returns the URL for the API, with additional path components.
      *
      * @return string The URL without a trailing slash.
@@ -662,17 +661,27 @@ class ParticleApi
     }
 
     /**
-     * TODO: for sending files, perhaps put that onto a separate parameter as a stream.
+     * Create a PSR-7 Request message for an API function.
+     *
+     * @param string $type The REST verb (get, post, put, delete)
+     * @param string|Psr\Http\Message\UriInterface $uri The endpoint URI
+     * @param array $params Additional GET or POST parameters
+     * @param string $authType Authentication type (token, basic, basic-dummy)
+     * @param boolean $useMultipart true if $params contains a file to upload; forces a multipart/form-data message.
      */
     protected function makeRequest($type, $uri, $params = [], $authType = 'token', $useMultipart = false)
     {
+        $type = strtoupper($type);
+        $authType = strtolower($authType);
+
         if (is_string($uri)) {
             $uri = $this->psr7->createUri($uri);
+        } elseif ( ! $uri instanceof UriInterface) {
+            throw new Exception('Unexpected uri data type; must be a string or GuzzleHttp\Psr7\Uri');
         }
 
-        // Add params as GET parameters to the URI if this is a GET request.
-        // CHECKME: and a DELETE request?
-        if (($type === 'get' || $type === 'delete') && $params) {
+        // Add params as GET parameters to the URI if this is a GET or DELETE request.
+        if (($type === 'GET' || $type === 'DELETE') && $params) {
             foreach($params as $key => $value) {
                 $uri = $uri->withQueryValue($uri, $key, $value);
             }
@@ -681,23 +690,28 @@ class ParticleApi
         // Create a PSR-7 Request message.
         $request = $this->psr7->createRequest($type, $uri);
 
-        if ($type === 'post' || $type === 'put') {
-            if ($useMultipart) {
-                // Add POST parameters that include files, to the body.
+        if ($type === 'POST' || $type === 'PUT') {
+            // In some cercumstances the PSR-7 message implementation may auto-detect the content
+            // and generate the Content-Type header. We can't rely on that for portability, so we
+            // create our own Content-Type headers here.
 
-                // We create the boundary here so we are not locked into a specific multipart stream implementation.
+            if ($useMultipart) {
+                // Add multipart form-date parameters (including files), to the body.
+                // We create the boundary here so we are not locked into a specific multipart stream
+                // implementation, as PSR-7 does not explicitly handle the boundary string.
                 $boundary = uniqid();
                 $body = $this->psr7->createStreamForMultipart($params, $boundary);
                 $request = $request->withBody($body);
                 $request = $request->withHeader('Content-Type', 'multipart/form-data; boundary=' . $boundary);
             } else {
-                // Add simple POST parameters to the message body.
+                // Add simple URL encoded POST parameters to the message body.
                 $body = $this->psr7->createStreamForUrlEncoded($params);
                 $request = $request->withBody($body);
                 $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
         }
 
+        // OAuth v1 token.
         if ($authType === 'token') {
             if ($this->accessToken) {
                 // Add the access token to the parameters.
@@ -707,6 +721,7 @@ class ParticleApi
             }
         }
 
+        // HTTP Basic authentication against the Particle cloud account.
         if ($authType === 'basic') {
             if ($this->auth_email && $this->auth_password) {
                 $request = $request->withHeader(
@@ -718,6 +733,7 @@ class ParticleApi
             }
         }
 
+        // Dummy basic authentication needed when creating new access tokens.
         if ($authType === 'basic-dummy') {
             $request = $request->withHeader(
                 'Authorization',
@@ -725,15 +741,6 @@ class ParticleApi
             );
         }
 
-        // TODO: Get the client from the connector.
-        // Or just return the message at this point.
-        $client = new \GuzzleHttp\Client(['defaults' => ['timeout' => $this->curlTimeout]]);
-
-        // TODO: catch exceptions, store the result and return something more appropriate.
-        // Maybe just return the message, so it can be sent as desired (e.g. synch/asynch).
-        $response = $client->send($request);
-
-        // TODO: return a more appropriate result, e.g. a stream or a PHP array.
-        return $response;
+        return $request;
     }
 }
