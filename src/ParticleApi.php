@@ -26,9 +26,6 @@ class ParticleApi
 
     protected $disableSSL = true;
 
-    protected $_error = 'No Error';
-    protected $_errorSource = 'None';
-
     // Latest return response (the decoded body).
     protected $result;
 
@@ -263,35 +260,6 @@ class ParticleApi
     public function getDisableSSL()
     {
         return $this->disableSSL;
-    }
-
-    /**
-     * TODO: move this to the HTTP client.
-     * Sets the internal _error & _errorSource variables.
-     * Allow for tracking which function resulted in an error and what that error was
-     *
-     * @param string $errorText The value to set _error to
-     * @param string $errorSource The value to set _errorSource to
-     *
-     * @return void
-     */
-    protected function _setError($errorText, $errorSource)
-    {
-        $this->_error = $errorText;
-        $this->_errorSource = $errorSource;
-    }
-
-    /**
-     * TODO: move this to the HTTP client.
-     * Sets the internal _errorSource. Allow for tracking which function resulted in an error
-     *
-     * @param string $errorSource The value to set _errorSource to
-     *
-     * @return void
-     */
-    protected function _setErrorSource($errorSource)
-    {
-        $this->_errorSource = $errorSource;
     }
 
     /**
@@ -668,28 +636,6 @@ class ParticleApi
     }
 
     /**
-     * TODO: move this to the HTTP client.
-     * Returns the latest error
-     *
-     * @return string The latest error
-     */
-    public function getError()
-    {
-        return $this->_error;
-    }
-
-    /**
-     * TODO: move this to the HTTP client.
-     * Returns the latest error's source (which function cause the error)
-     *
-     * @return string The latest error's source
-     */
-    public function getErrorSource()
-    {
-        return $this->_errorSource;
-    }
-
-    /**
      * Returns the latest result
      *
      * @return string The latest result from calling a cloud function
@@ -789,181 +735,5 @@ class ParticleApi
 
         // TODO: return a more appropriate result, e.g. a stream or a PHP array.
         return $response;
-    }
-
-    /**
-     * Performs a CURL Request with the given parameters
-     *
-     * @param string url The url to call
-     * @param mixed[] params An array of parameters to pass to the url
-     * @param string type The type of request ("GET", "POST", "PUT", etc)
-     * @param string authType The type of authorization to use ('token' uses the access token, 'basic' uses basic auth with the email/password auth details, and 'basic-dummy' uses dummy basic auth details)
-     *
-     * @return boolean true on success, false on failure
-     */
-    protected function _curlRequest($url, $params = [], $type = 'post', $authType = 'token')
-    {
-        $uri = $this->psr7->createUri($url);
-
-        if ($authType === 'token') {
-            if ($this->accessToken) {
-                // Add the access token to the parameters, but not for put-file.
-                if ($type !== 'put-file') {
-                    // Actually, don't. Add it as a header.
-                    //$params['access_token'] = $this->accessToken;
-                }
-            } else {
-                throw new Exception('No access token set');
-            }
-        }
-
-        // Is cURL installed?
-        if ( ! function_exists('curl_init')) {
-            throw new Exception('CURL is not installed or available');
-        }
-
-        // OK cool - then let's create a new cURL resource handle
-        $ch = curl_init();
-
-        // Set the number of POST vars, POST data
-        switch ($type) {
-            case 'get':
-                $url .= ('?' . http_build_query($params));
-                break;
-            case 'post':
-                curl_setopt($ch, CURLOPT_POST, count($params));
-                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
-                break;
-            case 'put':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
-                break;
-            case 'put-file':
-                // The access token goes onto the URL, while remaining parameters
-                // stay in the body.
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-                unset($params['access_token']);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-                $url .= '?access_token=' . rawurlencode($this->accessToken);
-                break;
-            case 'delete':
-                $url .= ('?' . http_build_query($params));
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-                break;
-            default:
-                throw new Exception(sprintf('Unsupported method type (%s)', $type));
-        }
-
-        $this->_debug('Opening a {type} connection to {url}', false, ['type' => $type, 'url' => $url]);
-        curl_setopt($ch, CURLOPT_URL, $url);
-
-        if ($this->disableSSL) {
-            // stop the verification of certificate
-            $this->_debug('[WARN] Disabling SSL Verification for CURL');
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        }
-
-        // Set a referer
-        // curl_setopt($ch, CURLOPT_REFERER, "http://www.example.com/curl.htm");
-
-        // User agent
-        // curl_setopt($ch, CURLOPT_USERAGENT, "MozillaXYZ/1.0");
-
-        // Include header in result? (0 = yes, 1 = no)
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-
-        // Should cURL return or print out the data? (true = return, false = print)
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        // Timeout in seconds
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->curlTimeout);
-
-        $this->_debug('Auth Type: {type}', false, ['type' => $authType]);
-
-        // basic auth
-        if ($authType === 'basic') {
-            if ($this->auth_email && $this->auth_password) {
-                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                curl_setopt($ch, CURLOPT_USERPWD, $this->auth_email . ':' . $this->auth_password);
-            } else {
-                throw new Exception('No auth credentials (email/password) set');
-            }
-        }
-
-        if ($authType === 'basic-dummy') {
-            curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-            curl_setopt($ch, CURLOPT_USERPWD, 'particle:particle');
-        }
-
-        // Download the given URL, and return output
-        $this->_debug('Executing Curl Operation');
-        $this->_debug('Url: {url}', false, ['url' => $url]);
-        $this->_debug('Params', false, $params);
-        $output = curl_exec($ch);
-
-        $this->_debug(sprintf('Curl Result: {result}', false, ['result' => $output]));
-
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $this->_debug('Curl Response Code: {code}', false, ['code' => $httpCode]);
-
-        // Close the cURL resource, and free system resources
-
-        $curlError = curl_errno($ch);
-        curl_close($ch);
-
-        if ($curlError != CURLE_OK) {
-            $this->_debug('CURL Request - There was a CURL error');
-            list(, $caller) = debug_backtrace(false);
-
-            $errorText = $this->_curlErrorCode($curlError);
-            $this->_setError($errorText, $caller['function']);
-            return false;
-        } else {
-            $retVal = json_decode($output, true);
-
-            if (json_last_error() == 0) {
-                if (isset($retVal['error']) && $retVal['error']) {
-                    $this->_debug('CURL Request - API response contained \'error\' field');
-                    $errorText = $retVal['error'];
-                    $this->_setError($errorText, __FUNCTION__);
-                    return false;
-                } else {
-                    $this->_debug('CURL Request - Returning True');
-                    $this->result = $retVal;
-                    return true;
-                }
-            } else {
-                $this->_debug('CURL Request - Unable to parse JSON');
-                $errorText = sprintf(
-                    'Unable to parse JSON. Json error = %s. See %s for more information. Raw response from Spark Cloud = \'%s\'',
-                    json_last_error(),
-                    'http://php.net/manual/en/function.json-last-error.php',
-                    $result
-                );
-
-                $this->_setError($errorText, __FUNCTION__);
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Returns a human readable string for a given CURL Error Code
-     *
-     * @param int curlCode The CURL error code
-     *
-     * @return string A human-readable string version of the curlCode
-     */
-    protected function _curlErrorCode($curlCode)
-    {
-        switch ($curlCode) {
-            case 26:
-                return 'Curl Error. There was a problem reading a local file or an error returned by the read callback.';
-            case 30:
-                return 'Curl Error. Operation timeout. The specified time-out period was reached according to the conditions.';
-            default:
-                return "Curl Error. Error number = {$curlCode}. See http://curl.haxx.se/libcurl/c/libcurl-errors.html for more information";
-        }
     }
 }
