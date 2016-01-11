@@ -18,7 +18,6 @@ In the same directory, create composer.json
 ~~~json
 {
     "require": {
-        "rexxars/morse": "^1.0",
         "psr/log": "^1.0",
         "psr/http-message": "^1.0",
         "guzzlehttp/psr7": "^1.2",

@@ -18,7 +18,7 @@ use GuzzleHttp\Psr7\MultipartStream;
 class GuzzleConnnector implements ConnnectorInterface
 {
     /**
-     * TODO: Check that guzzlehttp/psr7 is installed.
+     * TODO: Check that guzzlehttp/psr7 is installed, which is optional for the package.
      */
     public function __construct()
     {
@@ -30,8 +30,7 @@ class GuzzleConnnector implements ConnnectorInterface
         array $headers = [],
         $body = null,
         $protocolVersion = '1.1'
-    )
-    {
+    ) {
         return new Request($method, $uri, $headers, $body, $protocolVersion);
     }
 
@@ -40,13 +39,16 @@ class GuzzleConnnector implements ConnnectorInterface
         return new Uri($uri);
     }
 
+    /**
+     * @return GuzzleHttp\Psr7\Stream
+     */
     public function createStream($body = null)
     {
         return new Stream($body);
     }
 
     /**
-     * @return StreamInterface
+     * @return GuzzleHttp\Psr7\Stream
      */
     public function createStreamForString($body)
     {
@@ -59,7 +61,8 @@ class GuzzleConnnector implements ConnnectorInterface
 
     /**
      * Takes a simple array and returns as a URL encoded stream.
-     * @return StreamInterface
+     *
+     * @return GuzzleHttp\Psr7\Stream
      */
     public function createStreamForUrlEncoded(array $params = [])
     {
@@ -74,7 +77,9 @@ class GuzzleConnnector implements ConnnectorInterface
      *  'file' => ['contents' => $fileStreamOrString, 'filename' => 'myfile.cpp'],
      *  'file_type' => 'binary,'
      * ]
-     * @return StreamInterface
+     * Example here: https://gist.github.com/matthew-james/e6505f54fe6fd6117030
+     *
+     * @return GuzzleHttp\Psr7\MultipartStream
      */
     public function createStreamForMultipart(array $params, $boundary)
     {
