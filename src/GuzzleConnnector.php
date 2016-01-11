@@ -3,12 +3,11 @@
 namespace articfox1986\phpparticle;
 
 /**
- *
+ * Connector for Guzzle.
  */
 
-//use Psr\Http\Message\UriInterface;
-//use Psr\Http\Message\RequestInterface;
-//use Psr\Http\Message\StreamInterface;
+use Exception;
+use InvalidArgumentException;
 
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
@@ -22,6 +21,9 @@ class GuzzleConnnector implements ConnnectorInterface
      */
     public function __construct()
     {
+        if ( ! class_exists(Request::class)) {
+            throw new Exception('guzzlehttp/psr7 is not installed; it is required for the Guzzle connector');
+        }
     }
 
     public function createRequest(
@@ -93,12 +95,12 @@ class GuzzleConnnector implements ConnnectorInterface
             } elseif (is_array($param)) {
                 // Check for the minimal required elements.
                 if ( ! array_key_exists('contents', $param)) {
-                    throw new Exception(sprintf('Missing "contents" for multipart message field "%s"', $name));
+                    throw new InvalidArgumentException(sprintf('Missing "contents" for multipart message field "%s"', $name));
                 }
 
                 $field = array_merge($field, $param);
             } else {
-                throw new Exception(sprintf('Unsupported contents type for multipart message field "%s"', $name));
+                throw new InvalidArgumentException(sprintf('Unsupported contents type for multipart message field "%s"', $name));
             }
 
             $content[] = $field;

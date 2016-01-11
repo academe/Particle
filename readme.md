@@ -43,10 +43,10 @@ index.php demo:
 require "vendor/autoload.php";
 
 use articfox1986\phpparticle\ParticleApi;
-use articfox1986\phpparticle\Logger;
+use articfox1986\phpparticle\EchoLogger;
 use articfox1986\phpparticle\GuzzleConnnector;
 
-$logger = new Logger('HTML');
+$logger = new EchoLogger('HTML');
 
 $device = 'device-id';
 $access_token = 'access-token';

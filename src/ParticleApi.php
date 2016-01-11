@@ -14,7 +14,9 @@ namespace articfox1986\phpparticle;
 
 use Psr\Log\LoggerInterface;
 use Psr\Http\Message\UriInterface;
+
 use Exception;
+use InvalidArgumentException;
 
 class ParticleApi
 {
@@ -96,7 +98,7 @@ class ParticleApi
     public function setTimeout($timeout)
     {
         if ( ! is_numeric($timeout)) {
-            throw new Exception('Non numeric timeout');
+            throw new InvalidArgumentException('Non numeric timeout');
         }
 
         $clone = clone $this;
@@ -407,7 +409,7 @@ class ParticleApi
         } elseif (isset($imei)) {
             $params['imei'] = $imei;
         } else {
-            throw new Exception('Neither ICCID nor IMEI were supplied');
+            throw new InvalidArgumentException('Neither ICCID nor IMEI were supplied; at least one must be given');
         }
 
         $url = $this->getUrl(['device_claims']);
@@ -472,10 +474,9 @@ class ParticleApi
         if (is_string($file)) {
             $resource = fopen($file, 'r');
         } elseif (is_resource($file)) {
-            // CHECKME: should we rewind the file? I have a feeling the PSR-7 message should do that anyway.
             $resource = $file;
         } else {
-            throw new Exception('Unexpected file data type; must be open resource or path');
+            throw new InvalidArgumentException('Unexpected file data type; must be open resource or path');
         }
 
         $file_stream = $this->psr7->createStream($resource);
@@ -677,7 +678,7 @@ class ParticleApi
         if (is_string($uri)) {
             $uri = $this->psr7->createUri($uri);
         } elseif ( ! $uri instanceof UriInterface) {
-            throw new Exception('Unexpected uri data type; must be a string or GuzzleHttp\Psr7\Uri');
+            throw new InvalidArgumentException('Unexpected uri data type; must be a string or GuzzleHttp\Psr7\Uri');
         }
 
         // Add params as GET parameters to the URI if this is a GET or DELETE request.
@@ -717,7 +718,7 @@ class ParticleApi
                 // Add the access token to the parameters.
                 $request = $request->withHeader('Authorization', 'Bearer ' . $this->accessToken);
             } else {
-                throw new Exception('No access token set');
+                throw new InvalidArgumentException('No access token set');
             }
         }
 
@@ -729,7 +730,7 @@ class ParticleApi
                     'Basic ' . base64_encode($this->auth_email . ':' . $this->auth_password)
                 );
             } else {
-                throw new Exception('No auth credentials (email/password) set');
+                throw new InvalidArgumentException('No auth credentials (email/password) set');
             }
         }
 

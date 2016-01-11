@@ -1,17 +1,17 @@
 <?php namespace articfox1986\phpparticle;
 
 /**
- * Debug logger.
- * PHP 5.6 offers us the ability to use the LoggerTrait, which would
- * save some code duplication. That can be a future enhancement.
+ * Debug logger to echo the debug messages.
+ * This emulates what the original phpParticle package did.
  */
 
 use Exception;
+
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 //use Psr\Log\LoggerTrait;
 
-class Logger implements LoggerInterface
+class EchoLogger implements LoggerInterface
 {
     //use LoggerTrait;
 
