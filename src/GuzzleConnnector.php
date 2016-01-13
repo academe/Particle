@@ -17,7 +17,8 @@ use GuzzleHttp\Psr7\MultipartStream;
 class GuzzleConnnector implements ConnnectorInterface
 {
     /**
-     * Check that guzzlehttp/psr7 is installed, which is optional for the package.
+     * Check that guzzlehttp/psr7 is installed, which is optional for the package,
+     * but necessary for this connector.
      */
     public function __construct()
     {
