@@ -663,9 +663,10 @@ class ParticleApi
         $request = $this->psr7->createRequest($type, $uri);
 
         if ($type === 'POST' || $type === 'PUT') {
-            // In some cercumstances the PSR-7 message implementation may auto-detect the content
-            // and generate the Content-Type header. We can't rely on that for portability, so we
-            // create our own Content-Type headers here.
+            // In some implememtations the PSR-7 message class may auto-detect the content
+            // and generate the Content-Type header. We can't rely on that for portability,
+            // as it is not a part of the PSR-7 spec, so we create our own Content-Type
+            // headers here.
 
             if ($useMultipart) {
                 // Add multipart form-date parameters (including files), to the body.
