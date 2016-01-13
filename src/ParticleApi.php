@@ -39,7 +39,6 @@ class ParticleApi
     protected $debugLogger;
 
     protected $endpoint = 'https://api.particle.io/';
-    protected $curlTimeout = 10;
 
     protected $apiVersion = 'v1';
 
@@ -86,34 +85,6 @@ class ParticleApi
     public function getApiVersion()
     {
         return $this->apiVersion;
-    }
-
-    /**
-     * Sets the timeout used for calls to the api. 
-     *
-     * @param int $timeout The time, in seconds, for a call to wait for data before returning with a TIMEOUT error.
-     *
-     * @return self
-     */
-    public function setTimeout($timeout)
-    {
-        if ( ! is_numeric($timeout)) {
-            throw new InvalidArgumentException('Non numeric timeout');
-        }
-
-        $clone = clone $this;
-        $clone->curlTimeout = intval($timeout);
-        return $clone;
-    }
-
-    /**
-     * Gets the CURL timeout
-     *
-     * @return double
-     */
-    public function getTimeout()
-    {
-        return $this->curlTimeout;
     }
 
     /**
