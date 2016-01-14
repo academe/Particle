@@ -11,7 +11,7 @@ This is a development only package at the moment.
 
 First check out a clone:
 
-    git clone git@github.com:academe/phpParticle.git
+    git clone git@github.com:academe/Particle.git
 
 In the same directory, create composer.json
 
@@ -25,7 +25,7 @@ In the same directory, create composer.json
     },
     "autoload": {
         "psr-4": {
-            "academe\\particle\\": "phpParticle/src"
+            "academe\\particle\\": "Particle/src"
         }
     }
 }
@@ -89,25 +89,6 @@ echo "Reason=" . $response->getReasonPhrase() . "\n";
 var_dump(json_decode($response->getBody()));
 ~~~
 
-
-
-------
-
-# Ignore the below, for now.
-
-## Installation ##
-
-- GIT clone or download a zip of the repo and unzip into your project director
-- Rename `phpSpark.config.sample.php` to `phpSpark.config.php`
-- Set your access token and device id in `phpSpark.config.php`
-- (Optional) Copy and paste the code in `spark.firmware.cpp` into a new app in the Particle WebIDE & flash it to your core
-- (Optional) Run the any of the examples in the `examples` folder
-
-## Usage
-
-- Check out the examples in the `examples` folder
-- Try out the [phpSparkDashboard](https://github.com/harrisonhjones/phpSparkDashboard) project which uses this project ([demo](http://projects.harrisonhjones.com/phpSparkDashboard/))
-
 ## Implemented Features
 
 ### Device Management
@@ -137,4 +118,4 @@ var_dump(json_decode($response->getBody()));
 
 ## Not Yet Implemented Features
 - OAuth Client Creation (/v1/clients)
-- Advanced OAuth topics 
+- Advanced OAuth topics
