@@ -1,11 +1,18 @@
-[![Build Status](https://travis-ci.org/articfox1986/phpParticle.svg?branch=master)](https://travis-ci.org/articfox1986/phpParticle)
-
 phpParticle
 ========
 
 PHP Class for interacting with the Particle Cloud (particle.io)
 
-## Installation
+## TODO
+
+Work in progress, but main tasks are:
+
+* Create tests.
+* Remove old Spark code.
+* Replace examples.
+* Maybe remove the debug logging, given we have enough injected points to set debug.
+
+## Quick Dev Installation
 
 This is a development only package at the moment.
 
