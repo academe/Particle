@@ -15,6 +15,8 @@ namespace articfox1986\phpparticle;
 use Psr\Log\LoggerInterface;
 use Psr\Http\Message\UriInterface;
 
+use articfox1986\phpparticle\Psr7\ConnnectorInterface;
+
 use Exception;
 use InvalidArgumentException;
 

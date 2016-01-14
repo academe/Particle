@@ -43,8 +43,8 @@ index.php demo:
 require "vendor/autoload.php";
 
 use articfox1986\phpparticle\ParticleApi;
-use articfox1986\phpparticle\EchoLogger;
-use articfox1986\phpparticle\GuzzleConnnector;
+use articfox1986\phpparticle\Log\EchoLogger;
+use articfox1986\phpparticle\Psr7\GuzzleConnnector;
 
 $logger = new EchoLogger('HTML');
 
@@ -93,7 +93,7 @@ var_dump(json_decode($response->getBody()));
 
 ------
 
-Ignore the below, for now.
+# Ignore the below, for now.
 
 ## Installation ##
 

@@ -1,4 +1,4 @@
-<?php namespace articfox1986\phpparticle;
+<?php namespace articfox1986\phpparticle\Log;
 
 /**
  * Debug logger to echo the debug messages.
@@ -9,12 +9,9 @@ use Exception;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
-//use Psr\Log\LoggerTrait;
 
 class EchoLogger implements LoggerInterface
 {
-    //use LoggerTrait;
-
     // The debugType is HTML or TEXT.
     private $debugType = 'HTML';
 

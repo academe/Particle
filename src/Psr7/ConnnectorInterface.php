@@ -1,14 +1,10 @@
 <?php
 
-namespace articfox1986\phpparticle;
+namespace articfox1986\phpparticle\Psr7;
 
 /**
  * Links this package to the PSR-7 implementation.
  */
-
-//use Psr\Http\Message\UriInterface;
-//use Psr\Http\Message\RequestInterface;
-//use Psr\Http\Message\StreamInterface;
 
 interface ConnnectorInterface
 {
