@@ -1,6 +1,6 @@
 <?php
 
-namespace articfox1986\phpparticle;
+namespace Academe\Particle;
 
 /*
  * @project phpParticle
@@ -15,7 +15,7 @@ namespace articfox1986\phpparticle;
 use Psr\Log\LoggerInterface;
 use Psr\Http\Message\UriInterface;
 
-use articfox1986\phpparticle\Psr7\ConnnectorInterface;
+use academe\particle\Psr7\ConnnectorInterface;
 
 use Exception;
 use InvalidArgumentException;

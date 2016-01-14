@@ -1,6 +1,6 @@
 <?php
 
-namespace articfox1986\phpparticle\Psr7;
+namespace Academe\Particle\Psr7;
 
 /**
  * Connector for Guzzle.

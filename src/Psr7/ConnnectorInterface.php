@@ -1,6 +1,6 @@
 <?php
 
-namespace articfox1986\phpparticle\Psr7;
+namespace academe\particle\Psr7;
 
 /**
  * Links this package to the PSR-7 implementation.

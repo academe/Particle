@@ -1,5 +1,5 @@
 {
-    "name": "articfox1986/phpparticle",
+    "name": "academe/particle",
     "description": "A php package for working with the Particle API",
     "license": "MIT",
     "keywords": ["particle","php","photon"],
@@ -31,7 +31,7 @@
     },
     "autoload": {
         "psr-4": {
-            "articfox1986\\phpparticle\\": "src"
+            "Academe\\Particle\\": "src"
         }
     }
 }

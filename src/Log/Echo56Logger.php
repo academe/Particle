@@ -1,4 +1,6 @@
-<?php namespace articfox1986\phpparticle\Log;
+<?php
+
+namespace Academe\Particle\Log;
 
 /**
  * Debug logger to echo the debug messages.

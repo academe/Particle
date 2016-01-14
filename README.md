@@ -25,7 +25,7 @@ In the same directory, create composer.json
     },
     "autoload": {
         "psr-4": {
-            "articfox1986\\phpparticle\\": "phpParticle/src"
+            "academe\\particle\\": "phpParticle/src"
         }
     }
 }
@@ -42,9 +42,9 @@ index.php demo:
 
 require "vendor/autoload.php";
 
-use articfox1986\phpparticle\ParticleApi;
-use articfox1986\phpparticle\Log\EchoLogger;
-use articfox1986\phpparticle\Psr7\GuzzleConnnector;
+use Academe\Particle\ParticleApi;
+use Academe\Particle\Log\EchoLogger;
+use Academe\Particle\Psr7\GuzzleConnnector;
 
 $logger = new EchoLogger('HTML');
 
@@ -53,7 +53,7 @@ $access_token = 'access-token';
 $cloud_email = 'cloud-email';
 $cloud_password = 'cloud-password';
 
-$particle = new ParticleAPI(new GuzzleConnnector());
+$particle = new ParticleApi(new GuzzleConnnector());
 
 $particle = $particle
     ->setLogger($logger) // optional
