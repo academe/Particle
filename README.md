@@ -7,10 +7,10 @@ PHP Class for interacting with the Particle Cloud (particle.io)
 
 Work in progress, but main tasks are:
 
-* Create tests.
-* Remove old Spark code.
-* Replace examples.
-* Maybe remove the debug logging, given we have enough injected points to set debug.
+* [ ] Create tests.
+* [ ] Remove old Spark code.
+* [ ] Replace examples.
+* [ ] Maybe remove the debug logging, given we have enough injected points to set debug.
 
 ## Quick Dev Installation
 
