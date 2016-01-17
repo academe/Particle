@@ -92,7 +92,7 @@ class ParticleApi
     /**
      * Sets the authentication details for the Particle cloud account.
      *
-     * @param string $email The account email.
+     * @param string $email The account email (the username is an email).
      * @param string $password The account password.
      *
      * @return self
@@ -430,12 +430,13 @@ class ParticleApi
 
     /**
      * Uploads a source or compiled firmware file to the core.
-     * CHECKME: Should the content type change depending on whether the file content is
-     * binary or not? Maybe text/plain for a non-binary file?
+     * A binary firmware is the complete system and application pre-compiled.
+     * A source firmware is just the application source, which will be compiled
+     * on the cloud account before being uploaded to the Paricle device.
      *
      * @param string $deviceID The device ID of the device to upload the code to.
      * @param string $filename The filename of the firmware file to upload to the device. e.g. tinker.cpp.
-     * @param string|resource $file The path to the firmware file to upload (including the name). e.g. path/to/tinker.cpp
+     * @param string|resource $file The pathname to the firmware file to upload or a resource.
      * @param boolean $isBinary Set to true if uploading a .bin file or false for non-binary source code.
      *
      * @return Psr\Http\Message\RequestInterface
@@ -449,7 +450,7 @@ class ParticleApi
         } elseif (is_resource($file)) {
             $resource = $file;
         } else {
-            throw new InvalidArgumentException('Unexpected file data type; must be open resource or path');
+            throw new InvalidArgumentException('Unexpected file data type; must be an open resource or a pathname');
         }
 
         $file_stream = $this->psr7->createStream($resource);

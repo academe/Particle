@@ -36,4 +36,3 @@ else
     $spark->debug("Error: " . $spark->getError());
     $spark->debug("Error Source" . $spark->getErrorSource());
 }
-?>
