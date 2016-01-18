@@ -3,7 +3,16 @@
 namespace Academe\Particle;
 
 /**
- * Example usages of all the API functions.
+ * Example usages of [most of] the API functions.
+ *
+ * TODO: example:-
+ * - claim device
+ * - delete device
+ * - list webhooks
+ * - create webhook
+ * - delete webhook
+ * - get variable
+ * - signal device
  */
 
 use Academe\Particle\ParticleApi;
@@ -119,6 +128,157 @@ class Example
         );
 
         // Now send the message to the cloud.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    /**
+     * Give your device a random name, or speciify a new name.
+     */
+    public function setDeviceName($name = null)
+    {
+        if (empty($name)) {
+            $name = uniqid('phpSpark_');
+        }
+
+        // The PSR-7 request.
+        $request = $this->createApi()->renameDevice($this->deviceId, $name);
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    /**
+     * Get a list of all devices accessible through this token.
+     */
+    public function listDevices()
+    {
+        // The PSR-7 request.
+        $request = $this->createApi()->listDevices();
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    /**
+     * Get a list of all tokens for this cloud account.
+     */
+    public function listTokens()
+    {
+        // The PSR-7 request.
+        $request = $this->createApi()->listAccessTokens();
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    /**
+     * Create a new OAuth access token for this cloud account.
+     * Note, this is not an OAuth renewal, but a brand new token.
+     */
+    public function newAccessToken()
+    {
+        // The PSR-7 request.
+        // The token will last one hour (3600 seconds).
+        $request = $this->createApi()->newAccessToken(3600);
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    /**
+     * Delete an OAuth access token for this cloud account.
+     */
+    public function deleteAccessToken($token)
+    {
+        // The PSR-7 request.
+        $request = $this->createApi()->deleteAccessToken($token);
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    /**
+     * Get details for the default (for the demo) or another specified device.
+     */
+    public function getDevice($deviceId = null)
+    {
+        if (empty($deviceId)) {
+            $deviceId = $this->deviceId;
+        }
+
+        // The PSR-7 request.
+        $request = $this->createApi()->getDevice($deviceId);
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    /**
+     * Call a function.
+     * Turn on digital outut D0, then turn if off again.
+     * This will flash an LED connected to this pin.
+     * The Tinker application must be flashed first for this to work.
+     */
+    public function callFunction()
+    {
+        // The PSR-7 request.
+        $request_on = $this->createApi()->callFunction($this->deviceId, 'digitalwrite', 'D7,HIGH');
+        $request_off = $this->createApi()->callFunction($this->deviceId, 'digitalwrite', 'D7,LOW');
+
+        // Send the request to turn the LED on.
+        $response = $this->sendMessage($request_on);
+
+        // Leave the LED on for 500mS.
+        sleep(0.5);
+
+        // Send the request to turn the LED off.
+        $response = $this->sendMessage($request_off);
+
+        return $response;
+    }
+
+    public function listOranizations()
+    {
+        // The PSR-7 request.
+        $request = $this->createApi()->listOranizations();
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    public function getOranization($slug)
+    {
+        // The PSR-7 request.
+        $request = $this->createApi()->getOranization($slug);
+
+        // Send the request.
+        $response = $this->sendMessage($request);
+
+        return $response;
+    }
+
+    public function removeMember($slug, $username)
+    {
+        // The PSR-7 request.
+        $request = $this->createApi()->removeMember($slug, $username);
+
+        // Send the request.
         $response = $this->sendMessage($request);
 
         return $response;

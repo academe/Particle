@@ -29,8 +29,6 @@ class ParticleApi
     // Access token  for the API.
     protected $accessToken;
 
-    protected $disableSSL = true;
-
     // Latest return response (the decoded body).
     protected $result;
 
@@ -220,34 +218,6 @@ class ParticleApi
     }
 
     /**
-     * TODO: move this to the HTTP client.
-     * Turn on or off SSL verification (it's a CURL thing).
-     * For testing, before you get the certificates setup, you might need to disable SSL verificatioon.
-     * Note this is a security concern
-     *
-     * @param boolean $disableSSL true communicates with api endpoints without validating security certificates
-     *
-     * @return self
-     */
-    public function setDisableSSL($disableSSL)
-    {
-        $clone = clone $this;
-        $clone->disableSSL = (bool)$disableSSL ? true : false;
-        return $clone;
-    }
-
-    /**
-     * TODO: move this to the HTTP client.
-     * Gets the whether SSL strict checking is disabled
-     *
-     * @return boolean
-     */
-    public function getDisableSSL()
-    {
-        return $this->disableSSL;
-    }
-
-    /**
      * Sends debug text and data to the debug logger.
      *
      * @param string $debugText The debug string to log.
@@ -368,8 +338,8 @@ class ParticleApi
      * Generate a device claim code that allows the device to be successfully
      * claimed to a user's account during the SoftAP setup process.
      *
-     * @param string|null $iccid ICCID number (SIM card ID number) of the SIM you are generating a claim for. This will be used as the claim code.
-     * @param string|null $imei IMEI number of the Electron you are generating a claim for. This will be used as the claim code if iccid is not specified.
+     * @param string|null $iccid ICCID number of the SIM you are generating a claim for. Used as the claim code.
+     * @param string|null $imei IMEI number of the Electron you are generating a claim for. Used as the claim code if no ICCID.
      *
      * @return Psr\Http\Message\RequestInterface
      */
@@ -382,7 +352,7 @@ class ParticleApi
         } elseif (isset($imei)) {
             $params['imei'] = $imei;
         } else {
-            throw new InvalidArgumentException('Neither ICCID nor IMEI were supplied; at least one must be given');
+            throw new InvalidArgumentException('Neither ICCID nor IMEI were supplied; at least one is needed');
         }
 
         $url = $this->getUrl(['device_claims']);
@@ -490,8 +460,8 @@ class ParticleApi
      * Requires the email/password auth to be set.
      * TODO: support full OAuth client login and authorisation using an OAuth library (League should work).
      *
-     * @param int $expires_in How many seconds the token will be valid for. 0 means forever. Short lived tokens are better for security.
-     * @param string $expires_at When should the token expire? This should be an ISO8601 formatted date string.
+     * @param int $expires_in How long the token will be valid for, in seconds. 0=forever.
+     * @param string $expires_at When the token should expire. An ISO8601 format date string.
      * @param string $clientID The clientID. If you don't have one of these (only used in OAuth applications) set to null.
      * @param string $clientSecret The clientSecret. If you don't have one of these (only used in OAuth applications) set to null.
      *
@@ -570,7 +540,7 @@ class ParticleApi
      * @param string $webhookUrl The url to query once the event has occured
      * @param string $extras See http://docs.particle.io/webhooks/#webhook-options
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function newWebhook($event, $webhookUrl, array $extras = [])
     {
@@ -589,7 +559,7 @@ class ParticleApi
     /**
      * Delete webhooks from the particle cloud.
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function deleteWebhook($webhookID)
     {
@@ -607,15 +577,126 @@ class ParticleApi
      * @param string $deviceID The device ID of the device to send the signal mode state change command to.
      * @param int $signalState The signal state: 0 returns the RGB led back to normmal & 1 makes it flash a rainbow of color
      *
-     * @return TBC
+     * @return Psr\Http\Message\RequestInterface
      */
     public function signalDevice($deviceID, $signalState = 0)
     {
         $fields = ['signal' => $signalState];
 
-        $url = $this->getUrl(['devices', $deviceID]) . '/';
+        $url = $this->getUrl(['devices', $deviceID]);
 
         $result = $this->makeRequest('put', $url, $fields);
+        return $result;
+    }
+
+    /**
+     * List Organizations the currently authenticated user has access to.
+     *
+     * @return Psr\Http\Message\RequestInterface
+     */
+    public function listOranizations()
+    {
+        $url = $this->getUrl(['orgs']);
+
+        $result = $this->makeRequest('get', $url);
+        return $result;
+    }
+
+    /**
+     * Get details for an Organizations the currently authenticated user has access to.
+     *
+     * @param string $slug The Organization slug
+     *
+     * @return Psr\Http\Message\RequestInterface
+     */
+    public function getOranization($slug)
+    {
+        $url = $this->getUrl(['orgs', $slug]);
+
+        $result = $this->makeRequest('get', $url);
+        return $result;
+    }
+
+    /**
+     * Remove a team member from an Organization.
+     *
+     * @param string $orgSlug The Organization slug.
+     * @param string $username The username of the member to remove, normally an email addreess.
+     *
+     * @return Psr\Http\Message\RequestInterface
+     */
+    public function removeMember($orgSlug, $username)
+    {
+        $url = $this->getUrl(['orgs', $orgSlug, 'users', $username]);
+
+        $result = $this->makeRequest('delete', $url);
+        return $result;
+    }
+
+    /**
+     * Get a product for an Organization.
+     *
+     * @param string $orgSlug The Organization slug.
+     * @param string $productSlug The slug for the product.
+     *
+     * @return Psr\Http\Message\RequestInterface
+     */
+    public function getProduct($orgSlug, $productSlug)
+    {
+        $url = $this->getUrl(['orgs', $orgSlug, 'products', $productSlug]);
+
+        $result = $this->makeRequest('get', $url);
+        return $result;
+    }
+
+    /**
+     * Generate a device claim code for a product.
+     *
+     * @param string $orgSlug The Organization slug.
+     * @param string $productSlug The slug for the product.
+     * @param null|string $activationCode Activation Code. Only required if product is in private beta.
+     *
+     * @return Psr\Http\Message\RequestInterface
+     */
+    public function createProductClaimCode($orgSlug, $productSlug, $activationCode = null)
+    {
+        $url = $this->getUrl(['orgs', $orgSlug, 'products', $productSlug, 'device_claims']);
+
+        $result = $this->makeRequest('post', $url, ['activation_code' => $activationCode]);
+        return $result;
+    }
+
+    /**
+     * Remove a device from a organization product.
+     *
+     * @param string $orgSlug The Organization slug.
+     * @param string $productSlug The slug for the product.
+     * @param string $deviceId The device to remove.
+     *
+     * @return Psr\Http\Message\RequestInterface
+     */
+    public function removeProductDevice($orgSlug, $productSlug, $deviceId)
+    {
+        $url = $this->getUrl(['orgs', $orgSlug, 'products', $productSlug, 'devices', $deviceId]);
+
+        $result = $this->makeRequest('delete', $url);
+        return $result;
+    }
+
+    /**
+     * Create a customer for an organization.
+     *
+     * @param string $orgSlug The Organization slug.
+     * @param string $productSlug The slug for the product.
+     * @param string $deviceId The device to remove.
+     *
+     * @return Psr\Http\Message\RequestInterface
+     */
+    public function createCustomer($orgSlug)
+    {
+        $url = $this->getUrl(['orgs', $orgSlug, 'customers']);
+
+        $result = $this->makeRequest('post', $url, [], 'basic');
         return $result;
     }
 

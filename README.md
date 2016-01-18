@@ -8,8 +8,8 @@ PHP Class for interacting with the Particle Cloud (particle.io)
 Work in progress, but main tasks are:
 
 * [ ] Create tests.
-* [ ] Remove old Spark code.
-* [ ] Replace examples.
+* [x] Remove old Spark code.
+* [x] Replace examples.
 * [ ] Maybe remove the debug logging, given we have enough injected points to set debug.
 
 ## Quick Dev Installation
@@ -113,9 +113,21 @@ $example = new Example($access_token, $device, $email, $password);
 
 // Flash the device with the Tinker application.
 $response = $example->flashTinker();
+//$response = $example->setDeviceName();
+//$response = $example->setDeviceName('christmas_turkey');
+//$response = $example->listDevices();
+//$response = $example->getDevice();
+//$response = $example->getDevice('20033307343c03805403a138');
+//$response = $example->newAccessToken();
+//$response = $example->listTokens();
+//$response = $example->deleteAccessToken('176a67f0d31647beac429252af8663a5040a945c');
+//$response = $example->callFunction();
+//$response = $example->listOranizations();
+//$response = $example->removeMember('my_organization', 'someone@example.com');
 
 echo "Status=" . $response->getStatusCode() . "\n";
 echo "Reason=" . $response->getReasonPhrase() . "\n";
+echo "Detail=" . $response->getBody() . "\n";
 ~~~
 
 Don't forget to install Guzzle to run these examples:
