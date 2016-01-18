@@ -96,6 +96,34 @@ echo "Reason=" . $response->getReasonPhrase() . "\n";
 var_dump(json_decode($response->getBody()));
 ~~~
 
+## Example Class
+
+Examples have been put into the `Academe\Particle\Example` class. It can be run like this:
+
+~~~php
+use Academe\Particle\Example;
+
+$accessToken = 'your-account-access-token';
+$deviceId = 'your-device-id';
+$email = 'your-cloud-email-username';
+$password = 'your-cloud-password';
+
+// Instantiate the example class.
+$example = new Example($access_token, $device, $email, $password);
+
+// Flash the device with the Tinker application.
+$response = $example->flashTinker();
+
+echo "Status=" . $response->getStatusCode() . "\n";
+echo "Reason=" . $response->getReasonPhrase() . "\n";
+~~~
+
+Don't forget to install Guzzle to run these examples:
+
+    composer require guzzlehttp/guzzle
+
+Most of the other examples in this class require the Tinker application to be installed.
+
 ## Implemented Features
 
 ### Device Management
