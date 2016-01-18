@@ -1,6 +1,6 @@
 {
     "name": "academe/particle",
-    "description": "A php package for working with the Particle API",
+    "description": "A PSR-7 PHP package for working with the Particle API",
     "license": "MIT",
     "keywords": ["spark","particle","php","photon","iot"],
     "authors": [
