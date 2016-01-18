@@ -2,8 +2,12 @@
     "name": "academe/particle",
     "description": "A php package for working with the Particle API",
     "license": "MIT",
-    "keywords": ["particle","php","photon"],
+    "keywords": ["spark","particle","php","photon","iot"],
     "authors": [
+        {
+            "name": "Jason Judge",
+            "email": "jason@academe.co.uk"
+        },
         {
             "name": "Devin Pearson",
             "email": "devin@blackhat.co.za"
@@ -11,10 +15,6 @@
         {
             "name": "Harrison Jones",
             "email": "harrison@hhj.me"
-        },
-        {
-            "name": "Jason Judge",
-            "email": "jason@academe.co.uk"
         }
     ],
     "require": {
