@@ -14,91 +14,24 @@ Work in progress, but main tasks are:
 
 ## Quick Dev Installation
 
-This is a development only package at the moment.
+Using composer:
 
-First check out a clone:
+    composer.phar require academe/particle
 
-    git clone git@github.com:academe/Particle.git
+Add dependencies for the demo:
 
-In the same directory, create composer.json
-
-~~~json
-{
-    "require": {
-        "psr/log": "^1.0",
-        "psr/http-message": "^1.0",
-        "guzzlehttp/psr7": "^1.2",
-        "guzzlehttp/guzzle": "^6.1"
-    },
-    "autoload": {
-        "psr-4": {
-            "academe\\particle\\": "Particle/src"
-        }
-    }
-}
-~~~
-
-Then pull in the dependencies:
-
-    composer.phar update
-
-index.php demo:
-
-~~~php
-<?php
-
-require "vendor/autoload.php";
-
-use Academe\Particle\ParticleApi;
-use Academe\Particle\Log\EchoLogger;
-use Academe\Particle\Psr7\GuzzleConnnector;
-
-$logger = new EchoLogger('HTML');
-
-$device = 'device-id';
-$access_token = 'access-token';
-$cloud_email = 'cloud-email';
-$cloud_password = 'cloud-password';
-
-$particle = new ParticleApi(new GuzzleConnnector());
-
-$particle = $particle
-    ->setLogger($logger) // optional
-    ->setAccessToken($access_token)
-    ->setDebug(false) // or true
-    ->setAuth($cloud_email, $cloud_password);
-
-// Try any of these messages
-
-//$request = $particle->callFunction($device, 'function', 'function-parameters', true);
-//$request = $particle->listDevices();
-//$request = $particle->getDevice($device);
-//$request = $particle->renameDevice($device, 'a-new-name');
-//$request = $particle->getVariable($device, 'variable-name', true);
-//$request = $particle->listAccessTokens();
-//$request = $particle->newAccessToken();
-//$request = $particle->deleteAccessToken('token-id');
-//$request = $particle->claimDevice($device, true);
-//$request = $particle->listWebhooks();
-//$request = $particle->newWebhook('event', 'http://example.com/', []);
-//$request = $particle->deleteWebhook('webhook-id');
-//$request = $particle->signalDevice($device);
-//$request = $particle->uploadFirmware($device, 'tinker.cpp', 'phpParticle/examples/tinker.cpp', false);
-
-// Send the message.
-$client = new \GuzzleHttp\Client(['defaults' => ['timeout' => 2]]);
-$response = $client->send($request);
-
-// See the result
-echo "<pre>";
-echo "Status=" . $response->getStatusCode() . "\n";
-echo "Reason=" . $response->getReasonPhrase() . "\n";
-var_dump(json_decode($response->getBody()));
-~~~
+    composer.phar require guzzlehttp/guzzle
 
 ## Example Class
 
-Examples have been put into the `Academe\Particle\Example` class. It can be run like this:
+All the examples have been put into the `Academe\Particle\Example` class.
+Please look at this class to see how the API works.
+In summary, it generates PSR-7 messages, which are sent using a HTTP client.
+At the moment there is no interpretation of the results - you need to get the
+results you need from the PSR-7 response, the format of which is documented
+in the [Particle API documentation](https://docs.particle.io/reference/api/).
+
+You can be run the examples like this:
 
 ~~~php
 use Academe\Particle\Example;
@@ -137,6 +70,9 @@ Don't forget to install Guzzle to run these examples:
 Most of the other examples in this class require the Tinker application to be installed.
 
 ## Implemented Features
+
+TODO: this list is not complete. Some additional features are implemented, and the
+API has further new features that are not yet implemented.
 
 ### Device Management
 - List Devices
