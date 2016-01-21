@@ -1,8 +1,8 @@
 Particle
 ========
 
-PHP package for interacting with the Particle Cloud - https://particle.io/
-- and the cloud connected devices ([Photon](https://store.particle.io/collections/photon), P0, P1, Electron)
+PHP package for interacting with the Particle Cloud, https://particle.io/
+and the cloud-connected devices ([Photon](https://store.particle.io/collections/photon), P0, P1, Electron)
 
 ## TODO
 
