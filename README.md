@@ -1,16 +1,16 @@
 Particle
 ========
 
-PHP package for interacting with the Particle Cloud, https://particle.io/
-and the cloud-connected devices ([Photon](https://store.particle.io/collections/photon), P0, P1, Electron)
+PHP package for interacting with the [Particle Cloud](https://particle.io/),
+and its cloud-connected devices ([Photon](https://store.particle.io/collections/photon), P0, P1, Electron)
 
 ## TODO
 
 Work in progress, but main tasks are:
 
 * [ ] Create tests.
-* [x] Remove old Spark code.
-* [x] Replace examples.
+* [x] ~~Remove old Spark code.~~
+* [x] ~~Replace examples.~~
 * [ ] Maybe remove the debug logging, given we have enough injected points to set debug.
 * [ ] Full coverage of the API. Authentication as an application plus orgs are the main areas left.
 
