@@ -1,7 +1,8 @@
-phpParticle
+Particle
 ========
 
-PHP Class for interacting with the Particle Cloud (particle.io)
+PHP package for interacting with the Particle Cloud - https://particle.io/
+- and the cloud connected devices ([Photon](https://store.particle.io/collections/photon), P0, P1, Electron)
 
 ## TODO
 
@@ -11,8 +12,9 @@ Work in progress, but main tasks are:
 * [x] Remove old Spark code.
 * [x] Replace examples.
 * [ ] Maybe remove the debug logging, given we have enough injected points to set debug.
+* [ ] Full coverage of the API. Authentication as an application plus orgs are the main areas left.
 
-## Quick Dev Installation
+## Quick Installation
 
 Using composer:
 
@@ -25,8 +27,11 @@ Add dependencies for the demo:
 ## Example Class
 
 All the examples have been put into the `Academe\Particle\Example` class.
-Please look at this class to see how the API works.
-In summary, it generates PSR-7 messages, which are sent using a HTTP client.
+Please look into this class to see how the API works.
+
+In summary, this package generates PSR-7 messages, which are sent using any suitable
+HTTP client.
+
 At the moment there is no interpretation of the results - you need to get the
 results you need from the PSR-7 response, the format of which is documented
 in the [Particle API documentation](https://docs.particle.io/reference/api/).
@@ -63,11 +68,12 @@ echo "Reason=" . $response->getReasonPhrase() . "\n";
 echo "Detail=" . $response->getBody() . "\n";
 ~~~
 
-Don't forget to install Guzzle to run these examples:
+Don't forget to install Guzzle (v6) to run these examples:
 
     composer require guzzlehttp/guzzle
 
-Most of the other examples in this class require the Tinker application to be installed.
+Most of the other examples in this class require the Tinker application to be
+installed as the first step.
 
 ## Implemented Features
 
